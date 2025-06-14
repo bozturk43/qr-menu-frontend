@@ -19,7 +19,6 @@ export default function MenuDisplay({ slug }: { slug: string }) {
     if (isLoading) return <div className="text-center p-8">Yükleniyor...</div>;
     if (error) return <div className="text-center p-8 text-red-500">Hata oluştu.</div>;
     if (!restaurant) return <div className="text-center p-8">Restoran bulunamadı.</div>;
-    console.log("RESTORAN",restaurant);
 
     // Gelen veriden tema kimliğini alıyoruz
     const themeIdentifier = restaurant.selected_theme?.identifier || 'classic_theme';

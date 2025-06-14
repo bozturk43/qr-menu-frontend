@@ -8,7 +8,6 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     // Sunucu tarafında 'slug' parametresini alıyoruz.
     const {slug} = await params;
 
-    console.log(slug)
 
     // Tek görevi, slug'ı Client Component olan MenuDisplay'e prop olarak geçirmek.
     return (

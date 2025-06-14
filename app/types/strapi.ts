@@ -38,25 +38,46 @@ export interface StrapiResponse<T> {
     };
   };
 }
-
+export interface UserRegistrationInfo {
+  username: string;
+  email: string;
+  password: string;
+}
+export interface UserLoginInfo {
+  identifier: string; // Strapi hem email hem de username kabul eder
+  password: string;
+}
+export interface StrapiAuthResponse {
+  jwt: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    confirmed: boolean;
+    blocked: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
 // =================================================================
 // 2. NESNE VERİ MODELLERİ
 // =================================================================
-
-interface BaseAttributes {
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  provider: string; // 'local' veya sosyal medya sağlayıcıları
+  confirmed: boolean;
+  blocked: boolean;
   createdAt: string;
   updatedAt: string;
-  publishedAt: string;
 }
 
-/** Allergen modeli için attribute'lar */
-// Alerjenler için tip
 export interface Allergen {
   id: number;
   name: string;
   icon?: StrapiMedia;
 }
-
 
 export interface Theme {
   id: number;
@@ -82,8 +103,6 @@ export interface Category {
   products?: Product[];
 }
 
-
-/** Restaurant modeli için attribute'lar */
 export interface Restaurant {
   id: number;
   name: string;
@@ -95,5 +114,12 @@ export interface Restaurant {
   has_custom_design: boolean;
   subscription_status: 'active' | 'inactive' | 'payment_failed';
   subscription_expires_at: string;
+  owner?:User;
+}
 
+export interface NewCategoryData {
+  name: string;
+  restaurant: number;
+  display_order: number;
+  image?: number; // Resmin ID'si
 }
