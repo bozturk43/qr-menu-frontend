@@ -1,0 +1,142 @@
+'use client';
+
+import { useEffect, useState } from 'react'; // useState'i import ediyoruz
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { getRestaurantById } from '@/app/lib/api';
+
+// MUI & İkonlar
+import {
+    Box, Typography, Button, Paper, CircularProgress, Alert, Avatar,
+    Accordion, AccordionSummary, AccordionDetails // YENİ: Accordion bileşenlerini import ediyoruz
+} from '@mui/material';
+import { Add, Edit, ExpandMore as ExpandMoreIcon } from '@mui/icons-material'; // Açılır-kapanır ikonu için
+import { Category, Product, Restaurant } from '@/app/types/strapi';
+import AddProductModal from '@/app/components/dashboard/dialog-modals/AddProductModal';
+import EditProductModal from '@/app/components/dashboard/dialog-modals/EditProductModal';
+
+export default function ProductsPage() {
+    const params = useParams();
+    const restaurantId = params.restaurantId as string;
+    const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+
+    // Hangi accordion panelinin açık olduğunu tutmak için state
+    // İlk kategorinin ID'sini veya index'ini vererek varsayılan olarak açık gelmesini sağlayabiliriz.
+    const [expanded, setExpanded] = useState<number | false>(false);
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [productToEdit, setProductToEdit] = useState<{ product: Product; category: Category } | null>(null);
+
+
+
+    const { data: restaurant, isLoading, isError, error } = useQuery({
+        queryKey: ['restaurant', restaurantId],
+        queryFn: () => getRestaurantById(restaurantId, Cookies.get('jwt')!),
+        enabled: !!restaurantId,
+    });
+
+    useEffect(() => {
+        if (restaurant?.categories && restaurant.categories.length > 0) {
+            if (expanded === false) {
+                setExpanded(restaurant.categories[0].id);
+            }
+        }
+    }, [restaurant, expanded]);
+
+    const handleChange = (panelId: number) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+        setExpanded(isExpanded ? panelId : false);
+    };
+
+
+    if (isLoading) return <CircularProgress />;
+    if (isError) return <Alert severity="error">{(error as Error).message}</Alert>;
+    if (!restaurant) return <Typography>Restoran bulunamadı.</Typography>;
+
+    console.log(restaurant);
+
+    return (
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold' }}>
+                    {restaurant.name} - Ürünler
+                </Typography>
+                <Button variant="contained" color="secondary" startIcon={<Add />} onClick={() => setModalOpen(true)}>
+                    Yeni Ürün Ekle
+                </Button>
+            </Box>
+
+            {/* Kategorilere göre gruplanmış ürün listesi - ARTIK ACCORDION İLE */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {restaurant.categories && restaurant.categories.length > 0 ? (
+                    restaurant.categories.map(category => (
+                        <Accordion
+                            key={category.id}
+                            // Hangi panelin açık olduğunu state'imizle kontrol ediyoruz
+                            expanded={expanded === category.id}
+                            // Tıklandığında state'i güncelleyecek fonksiyon
+                            onChange={handleChange(category.id)}
+                            elevation={2}
+                        >
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                aria-controls={`panel${category.id}-content`}
+                                id={`panel${category.id}-header`}
+                            >
+                                <Typography variant="h6">{category.name}</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails sx={{ backgroundColor: 'action.hover' }}>
+                                {category.products && category.products.length > 0 ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        {category.products.map(product => (
+                                            <Paper key={product.id} variant="outlined" sx={{ display: 'flex', alignItems: 'center', p: 2, gap: 2 }}>
+                                                <Avatar
+                                                    variant="rounded"
+                                                    src={product.images?.[0] ? `${STRAPI_URL}${product.images[0].url}` : undefined}
+                                                    sx={{ width: 56, height: 56 }}
+                                                >
+                                                    {product.name.charAt(0)}
+                                                </Avatar>
+                                                <Box sx={{ flexGrow: 1 }}>
+                                                    <Typography sx={{ fontWeight: 'bold' }}>{product.name}</Typography>
+                                                    <Typography variant="body2" color="text.secondary">{product.description}</Typography>
+                                                </Box>
+                                                <Typography sx={{ fontWeight: 'bold', minWidth: '80px', textAlign: 'right' }}>
+                                                    {product.price} TL
+                                                </Typography>
+                                                <Button size="small" variant="outlined" startIcon={<Edit />} onClick={() => setProductToEdit({ product, category })}>
+                                                    Düzenle
+                                                </Button>
+                                            </Paper>
+                                        ))}
+                                    </Box>
+                                ) : (
+                                    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+                                        Bu kategoride henüz ürün yok.
+                                    </Typography>
+                                )}
+                            </AccordionDetails>
+                        </Accordion>
+                    ))
+                ) : (
+                    <Typography>Önce bir kategori eklemelisiniz.</Typography>
+                )}
+            </Box>
+            <AddProductModal
+                open={isModalOpen}
+                onClose={() => setModalOpen(false)}
+                restaurantId={restaurantId}
+                categories={restaurant.categories || []}
+            />
+            {productToEdit && (
+                <EditProductModal
+                    open={!!productToEdit}
+                    onClose={() => setProductToEdit(null)}
+                    product={productToEdit.product}
+                    initialCategoryId={productToEdit.category.id}
+                    categories={restaurant.categories || []}
+                    restaurantId={restaurantId}
+                />
+            )}
+        </Box>
+    );
+}

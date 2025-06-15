@@ -70,12 +70,22 @@ export async function getRestaurantById(
 
   // populateQuery nesnesini güncelliyoruz.
   const populateQuery = {
-    logo: true,
-    categories: {
-      // 'categories' ilişkisini getir ve onun da bir alt seviyesindeki
-      // tüm ilişkileri (yani 'products') populate et.
-      populate: '*',
-    },
+    logo: true, // 1. seviye: Restoranın logosu
+    categories: { // 1. seviye: Restoranın kategorileri
+      populate: { // 2. seviye: Her bir kategorinin içini doldur
+        image: true, // Kategorinin kendi resmi
+        products: { // 2. seviye: Her bir kategorinin ürünleri
+          populate: { // 3. seviye: Her bir ürünün içini doldur
+            images: true,   // Ürünün resimleri
+            allergens: {  // Ürünün alerjenleri
+              populate: { // 4. seviye: Her bir alerjenin içini doldur
+                icon: true // Alerjenin ikonu (varsa)
+              }
+            }
+          }
+        }
+      }
+    }
   };
 
   const queryString = qs.stringify({

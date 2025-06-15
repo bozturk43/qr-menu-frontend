@@ -12,20 +12,16 @@ export interface StrapiMedia {
   height: number;
   formats?: { [key: string]: { url: string } };
 }
-
-
 /** Strapi'nin herhangi bir koleksiyon öğesi için kullandığı sarmalayıcı */
 export type StrapiCollection<T> = T & {
   id: number;
 };
-
 /** Strapi'nin ilişki (relation) alanlarını sarmalama şekli */
 // Tekli ilişki için: { data: StrapiCollection<T> }
 // Çoklu ilişki için: { data: StrapiCollection<T>[] }
 export interface StrapiRelation<T> {
   data: T;
 }
-
 /** Strapi'nin bir liste döndüğünde kullandığı genel API yanıtı */
 export interface StrapiResponse<T> {
   data: T[];
@@ -93,14 +89,7 @@ export interface Product {
   is_available: boolean;
   images?: StrapiMedia[];
   allergens?: Allergen[];
-}
-
-export interface Category {
-  id: number;
-  name: string;
-  display_order?: number;
-  image?: StrapiMedia;
-  products?: Product[];
+  category:Category;
 }
 
 export interface Restaurant {
@@ -114,12 +103,46 @@ export interface Restaurant {
   has_custom_design: boolean;
   subscription_status: 'active' | 'inactive' | 'payment_failed';
   subscription_expires_at: string;
-  owner?:User;
+  owner?: User;
 }
 
+//Category CRUD Modelleri
+export interface Category {
+  id: number;
+  name: string;
+  display_order?: number;
+  image?: StrapiMedia;
+  products?: Product[];
+  restaurant?: Restaurant; // Belki bu şekildeydi
+}
 export interface NewCategoryData {
   name: string;
   restaurant: number;
   display_order: number;
   image?: number; // Resmin ID'si
 }
+export interface UpdateCategoryData {
+  name?: string;
+  image?: number;
+}
+//Product CRUD Modelleri
+export interface NewProductData {
+  name: string;
+  price: number;
+  description?: string;
+  category: number; // Ait olduğu kategorinin ID'si
+  images?: number[]; // Yüklenecek resimlerin ID dizisi
+  is_available?: boolean;
+}
+export interface UpdateProductData {
+  name?: string;
+  description?: string;
+  price?: number;
+  category?: number;
+  is_available?: boolean;
+  images?: {
+    connect?: { id: number }[];
+    disconnect?: { id: number }[];
+  };
+}
+

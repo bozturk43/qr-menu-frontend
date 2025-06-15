@@ -5,32 +5,27 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import Cookies from 'js-cookie';
-import type { Category, NewCategoryData } from '@/app/types/strapi';
-import AddCategoryModal from '@/app/components/dashboard/dialog-modals/AddCategoryModal'; // Yeni modal bileşenimiz
-
-
+import type { Category } from '@/app/types/strapi';
+import AddCategoryModal from '@/app/components/dashboard/dialog-modals/AddCategoryModal';
 // API Fonksiyonları
 import { getRestaurantById } from '@/app/lib/api/restaurant.api';
-import { createCategory, updateCategoryOrder, uploadFile } from '@/app/lib/api/category.api';
-
+import { deleteCategory, updateCategoryOrder } from '@/app/lib/api/category.api';
 // Drag and Drop Kütüphanesi
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
 // MUI ve İkonlar
-import { Box, Typography, Button, Paper, List, ListItem, ListItemText, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Alert, ListItemIcon } from '@mui/material';
+import { Box, Typography, Button, Paper, List, ListItem, ListItemText, IconButton, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import { Add, DragHandle as DragHandleIcon, Delete, Edit } from '@mui/icons-material';
+import EditCategoryModal from '@/app/components/dashboard/dialog-modals/EditCategoryModal';
 
 // Sürüklenebilir her bir kategori satırını temsil eden bileşen
-function SortableCategoryItem({ category }: { category: Category }) {
+function SortableCategoryItem({ category, onEdit, onDelete }: { category: Category, onEdit: (category: Category) => void, onDelete: (category: Category) => void }) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: category.id });
-
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
     };
-
     return (
         <Paper ref={setNodeRef} style={style} elevation={2} sx={{ mb: 1, touchAction: 'none' }}>
             <ListItem>
@@ -39,9 +34,9 @@ function SortableCategoryItem({ category }: { category: Category }) {
                 </IconButton>
                 <ListItemText primary={category.name} />
                 <IconButton aria-label="edit">
-                    <Edit fontSize="small" />
+                    <Edit fontSize="small" onClick={() => onEdit(category)} />
                 </IconButton>
-                <IconButton aria-label="delete" color="error">
+                <IconButton aria-label="delete" color="error" onClick={() => onDelete(category)}>
                     <Delete fontSize="small" />
                 </IconButton>
             </ListItem>
@@ -54,15 +49,26 @@ export default function CategoriesPage() {
     const params = useParams();
     const queryClient = useQueryClient();
     const restaurantId = params.restaurantId as string;
-    const [selectedFile, setSelectedFile] = useState<File | null>(null); // RESİM DOSYASI İÇİN YENİ STATE
-
     // Sıralanabilir kategorileri tutmak için lokal bir state
     const [categories, setCategories] = useState<Category[]>([]);
+    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+
+    const deleteCategoryMutation = useMutation({
+        mutationFn: (categoryId: number) => deleteCategory(categoryId, Cookies.get('jwt')!),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+            setCategoryToDelete(null); // Onay kutusunu kapat
+        },
+        onError: (error) => {
+            alert(`Hata: ${error.message}`); // Backend'den gelen hatayı göster
+            setCategoryToDelete(null); // Hata sonrası onay kutusunu yine de kapat
+
+        }
+    });
 
     // Modal (pop-up) yönetimi için state'ler
     const [isModalOpen, setModalOpen] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState('');
-
     // 1. VERİ ÇEKME: TanStack Query ile restoran ve kategori verilerini alıyoruz
     const { data: restaurant, isLoading, isError, error } = useQuery({
         queryKey: ['restaurant', restaurantId],
@@ -88,39 +94,6 @@ export default function CategoriesPage() {
         },
     });
 
-    // 3. VERİ OLUŞTURMA: Yeni kategori ekleyen mutation
-    const createCategoryMutation = useMutation({
-        mutationFn: async ({ name, file }: { name: string, file: File | null }) => {
-            const token = Cookies.get('jwt');
-            if (!token) throw new Error('Not authenticated');
-
-            let imageId: number | undefined = undefined;
-
-            // 1. Eğer dosya seçilmişse, önce onu yükle
-            if (file) {
-                imageId = await uploadFile(file, token);
-            }
-
-            // 2. Kategori verisini hazırla
-            const newOrder = categories.length;
-            const categoryData: NewCategoryData = {
-                name: name,
-                restaurant: +restaurantId,
-                display_order: newOrder,
-                image: imageId, // Varsa resim ID'sini ekle
-            };
-
-            // 3. Kategoriyi oluştur
-            return createCategory(categoryData, token);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
-            setModalOpen(false);
-            setNewCategoryName('');
-            setSelectedFile(null); // Formu temizle
-        }
-    });
-
     // Drag-and-drop için sensörler
     const sensors = useSensors(useSensor(PointerSensor));
 
@@ -144,16 +117,25 @@ export default function CategoriesPage() {
         }
     }
 
-    // Yeni kategori oluşturma formu gönderildiğinde
-    const handleCreateCategory = () => {
-        if (newCategoryName.trim()) {
-            createCategoryMutation.mutate({ name: newCategoryName, file: selectedFile });
-        }
+    // Edit modal'ını açacak fonksiyon
+    const handleOpenEditModal = (category: Category) => {
+        setEditingCategory(category);
     };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files.length > 0) {
-            setSelectedFile(event.target.files[0]);
+    // Edit modal'ını kapatacak fonksiyon
+    const handleCloseEditModal = () => {
+        setEditingCategory(null);
+    };
+
+    // Silme onay kutusunu açan fonksiyon
+    const handleOpenDeleteConfirm = (category: Category) => {
+        setCategoryToDelete(category);
+    };
+
+    // Silme işlemini başlatan fonksiyon
+    const handleDeleteConfirm = () => {
+        if (categoryToDelete) {
+            deleteCategoryMutation.mutate(categoryToDelete.id);
         }
     };
 
@@ -176,7 +158,12 @@ export default function CategoriesPage() {
                     <SortableContext items={categories} strategy={verticalListSortingStrategy}>
                         <List>
                             {categories.map(category => (
-                                <SortableCategoryItem key={category.id} category={category} />
+                                <SortableCategoryItem
+                                    key={category.id}
+                                    category={category}
+                                    onEdit={handleOpenEditModal}
+                                    onDelete={handleOpenDeleteConfirm}
+                                />
                             ))}
                         </List>
                     </SortableContext>
@@ -214,6 +201,35 @@ export default function CategoriesPage() {
                 restaurantId={restaurantId}
                 currentCategoryCount={categories.length}
             />
+            {editingCategory && (
+                <EditCategoryModal
+                    open={!!editingCategory}
+                    onClose={handleCloseEditModal}
+                    category={editingCategory}
+                    restaurantId={restaurantId}
+                />
+            )}
+            <Dialog
+                open={!!categoryToDelete}
+                onClose={() => setCategoryToDelete(null)}
+            >
+                <DialogTitle>Kategoriyi Silmeyi Onayla</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Emin misiniz? **"{categoryToDelete?.name}"** adlı kategori kalıcı olarak silinecektir. Bu işlem geri alınamaz.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setCategoryToDelete(null)}>İptal</Button>
+                    <Button
+                        onClick={handleDeleteConfirm}
+                        color="error"
+                        disabled={deleteCategoryMutation.isPending}
+                    >
+                        {deleteCategoryMutation.isPending ? 'Siliniyor...' : 'Evet, Sil'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
