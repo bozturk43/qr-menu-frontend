@@ -51,8 +51,8 @@ export default function RestaurantSwitcher({ restaurants }: RestaurantSwitcherPr
   // DURUM 1: Kullanıcının hiç restoranı yok.
   if (!restaurants || restaurants.length === 0) {
     return (
-        <Button variant="outlined" color="inherit" startIcon={<PlusCircle size={18}/>} href="/dashboard/restaurants/new">
-            İlk Restoranını Oluştur
+        <Button variant="outlined" color="inherit" startIcon={<PlusCircle size={18}/>}>
+            Öncelikle Restoran Ekleyin
         </Button>
     );
   }
@@ -66,10 +66,12 @@ export default function RestaurantSwitcher({ restaurants }: RestaurantSwitcherPr
         variant="outlined"
         color="inherit"
         startIcon={<Building size={18}/>}
+        disabled={!restaurants || restaurants.length === 0}
         endIcon={<ChevronsUpDown size={16} />}
         sx={{ textTransform: 'none', minWidth: '220px', justifyContent: 'space-between', textAlign: 'left' }}
       >
         {/* Eğer aktif bir restoran varsa adını, yoksa "Restoran Seç" yazısını göster */}
+        {!restaurants || restaurants.length === 0 && "Öncelikle Restoran Ekleyin"}
         {activeRestaurant ? activeRestaurant.name : "Restoran Seçin"}
       </Button>
       <Menu
@@ -94,7 +96,7 @@ export default function RestaurantSwitcher({ restaurants }: RestaurantSwitcherPr
             {restaurant.name}
           </MenuItem>
         ))}
-        <MenuItem component="a" href="/dashboard/restaurants/new" sx={{color: 'primary.main', mt: 1}}>
+        <MenuItem component="a" href="/dashboard" sx={{color: 'primary.main', mt: 1}}>
           <ListItemIcon>
             <PlusCircle size={16} />
           </ListItemIcon>

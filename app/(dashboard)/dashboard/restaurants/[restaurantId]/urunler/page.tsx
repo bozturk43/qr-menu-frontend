@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'; // useState'i import ediyoruz
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { deleteProduct, getRestaurantById } from '@/app/lib/api';
+import { deleteProduct, getRestaurantById, updateProductOrder } from '@/app/lib/api';
 
 // MUI & İkonlar
 import {
@@ -14,9 +14,10 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions
+    DialogActions,
+    IconButton
 } from '@mui/material';
-import { Add, Delete, Edit, ExpandMore as ExpandMoreIcon } from '@mui/icons-material'; // Açılır-kapanır ikonu için
+import { Add, Delete, Edit, ExpandMore as ExpandMoreIcon, ArrowUpward, ArrowDownward } from '@mui/icons-material'; // Açılır-kapanır ikonu için
 import { Category, Product, Restaurant } from '@/app/types/strapi';
 import AddProductModal from '@/app/components/dashboard/dialog-modals/AddProductModal';
 import EditProductModal from '@/app/components/dashboard/dialog-modals/EditProductModal';
@@ -52,6 +53,14 @@ export default function ProductsPage() {
             alert(`Hata: ${error.message}`);
         }
     });
+    const updateProductOrderMutation = useMutation({
+        mutationFn: (orderedProducts: { id: number, display_order: number }[]) =>
+            updateProductOrder(orderedProducts, Cookies.get('jwt')!),
+        onSuccess: () => {
+            // Başarılı olunca cache'i tazele ki sunucudan gelen son sıralama görünsün
+            queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+        },
+    });
 
     useEffect(() => {
         if (restaurant?.categories && restaurant.categories.length > 0) {
@@ -70,6 +79,33 @@ export default function ProductsPage() {
 
     const handleChange = (panelId: number) => (event: React.SyntheticEvent, isExpanded: boolean) => {
         setExpanded(isExpanded ? panelId : false);
+    };
+    const handleMoveProduct = (category_id: number, product_id: number, direction: 'up' | 'down') => {
+        const categories = restaurant?.categories || [];
+        const targetCategory = categories.find(c => c.id === category_id);
+        if (!targetCategory || !targetCategory.products) return;
+
+        const products = [...targetCategory.products].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+        const currentIndex = products.findIndex(p => p.id === product_id);
+
+        if (currentIndex === -1) return;
+        if (direction === 'up' && currentIndex === 0) return;
+        if (direction === 'down' && currentIndex === products.length - 1) return;
+
+        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+        // Diziyi yeniden sırala
+        const [movedProduct] = products.splice(currentIndex, 1);
+        products.splice(newIndex, 0, movedProduct);
+
+        // API'ye gönderilecek yeni sıralama verisini oluştur
+        const updatedOrderForApi = products.map((p, index) => ({
+            id: p.id,
+            display_order: index,
+        }));
+
+        // Mutasyonu tetikle
+        updateProductOrderMutation.mutate(updatedOrderForApi);
     };
     const handleDeleteConfirm = () => {
         if (productToDelete) {
@@ -117,30 +153,39 @@ export default function ProductsPage() {
                             <AccordionDetails sx={{ backgroundColor: 'action.hover' }}>
                                 {category.products && category.products.length > 0 ? (
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                        {category.products.map(product => (
-                                            <Paper key={product.id} variant="outlined" sx={{ display: 'flex', alignItems: 'center', p: 2, gap: 2 }}>
-                                                <Avatar
-                                                    variant="rounded"
-                                                    src={product.images?.[0] ? `${STRAPI_URL}${product.images[0].url}` : undefined}
-                                                    sx={{ width: 56, height: 56 }}
-                                                >
-                                                    {product.name.charAt(0)}
-                                                </Avatar>
-                                                <Box sx={{ flexGrow: 1 }}>
-                                                    <Typography sx={{ fontWeight: 'bold' }}>{product.name}</Typography>
-                                                    <Typography variant="body2" color="text.secondary">{product.description}</Typography>
-                                                </Box>
-                                                <Typography sx={{ fontWeight: 'bold', minWidth: '80px', textAlign: 'right' }}>
-                                                    {product.price} TL
-                                                </Typography>
-                                                <Button size="small" variant="outlined" startIcon={<Edit />} onClick={() => setProductToEdit({ product, category })}>
-                                                    Düzenle
-                                                </Button>
-                                                <Button size="small" variant="outlined" color="error" startIcon={<Delete />} onClick={() => setProductToDelete(product)}>
-                                                    Sil
-                                                </Button>
-                                            </Paper>
-                                        ))}
+                                        {category.products.sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                                            .map((product, index, arr) => (
+                                                <Paper key={product.id} variant="outlined" sx={{ display: 'flex', alignItems: 'center', p: 2, gap: 2 }}>
+                                                    <Avatar
+                                                        variant="rounded"
+                                                        src={product.images?.[0] ? `${STRAPI_URL}${product.images[0].url}` : undefined}
+                                                        sx={{ width: 56, height: 56 }}
+                                                    >
+                                                        {product.name.charAt(0)}
+                                                    </Avatar>
+                                                    <Box sx={{ flexGrow: 1 }}>
+                                                        <Typography sx={{ fontWeight: 'bold' }}>{product.name}</Typography>
+                                                        <Typography variant="body2" color="text.secondary">{product.description}</Typography>
+                                                    </Box>
+                                                    <Typography sx={{ fontWeight: 'bold', minWidth: '80px', textAlign: 'right' }}>
+                                                        {product.price} TL
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', mr: 2 }}>
+                                                        <IconButton size="small" onClick={() => handleMoveProduct(category.id, product.id, 'up')} disabled={index === 0}>
+                                                            <ArrowUpward fontSize="inherit" />
+                                                        </IconButton>
+                                                        <IconButton size="small" onClick={() => handleMoveProduct(category.id, product.id, 'down')} disabled={index === arr.length - 1}>
+                                                            <ArrowDownward fontSize="inherit" />
+                                                        </IconButton>
+                                                    </Box>
+                                                    <Button size="small" variant="outlined" startIcon={<Edit />} onClick={() => setProductToEdit({ product, category })}>
+                                                        Düzenle
+                                                    </Button>
+                                                    <Button size="small" variant="outlined" color="error" startIcon={<Delete />} onClick={() => setProductToDelete(product)}>
+                                                        Sil
+                                                    </Button>
+                                                </Paper>
+                                            ))}
                                     </Box>
                                 ) : (
                                     <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>

@@ -90,6 +90,7 @@ export interface Product {
   images?: StrapiMedia[];
   allergens?: Allergen[];
   category: Category;
+  display_order?:number;
 }
 
 export interface Restaurant {
@@ -104,6 +105,7 @@ export interface Restaurant {
   subscription_status: 'active' | 'inactive' | 'payment_failed';
   subscription_expires_at: string;
   owner?: User;
+  plan?: 'free' |'premium'
 }
 
 //Category CRUD Modelleri
@@ -143,4 +145,9 @@ export interface UpdateProductData {
   images?: number[];
 
 }
-
+//Restaurant CRUD Modelleri
+export interface NewRestaurantData {
+  name: string;
+  logo?:number;
+  owner:number;
+}

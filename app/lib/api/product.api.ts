@@ -85,3 +85,19 @@ export async function deleteProduct(id: number, jwt: string): Promise<any> {
     throw error;
   }
 }
+export async function updateProductOrder(
+  orderedProducts: { id: number; display_order: number }[],
+  jwt: string
+) {
+  const updateUrl = `${STRAPI_URL}/api/products/batch-update-order`;
+  const res = await fetch(updateUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwt}`,
+    },
+    body: JSON.stringify({ products: orderedProducts }),
+  });
+  if (!res.ok) throw new Error('Ürün sıralaması güncellenemedi.');
+  return res.json();
+}

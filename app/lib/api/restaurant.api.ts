@@ -1,6 +1,6 @@
 // src/lib/api/restaurant.api.ts
 
-import { Restaurant, StrapiCollection } from "@/app/types/strapi";
+import { NewRestaurantData, Restaurant, StrapiCollection } from "@/app/types/strapi";
 import qs from "qs";
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
@@ -55,7 +55,6 @@ export async function getRestaurantBySlug(slug: string): Promise<StrapiCollectio
     return null;
   }
 }
-
 /**
  * ID'ye göre tek bir restoranın tüm ilişkili verilerini getirir.
  * Bu fonksiyon yetkilendirme gerektirir.
@@ -124,8 +123,6 @@ export async function getRestaurantById(
     return null;
   }
 }
-
-
 /**
  * Belirli bir kullanıcı ID'sine ait, sadece yayınlanmış restoranları getirir.
  * Önce tüm restoranları çeker, sonra kod içinde filtreler.
@@ -186,5 +183,36 @@ export async function getRestaurantsByOwner(
   } catch (error) {
     console.error("Error in getRestaurantsByOwner:", error);
     return [];
+  }
+}
+
+/**
+ * Yeni bir restoran oluşturur.
+ */
+export async function createRestaurant(
+  restaurantData: NewRestaurantData,
+  jwt: string
+): Promise<Restaurant> {
+  const createUrl = `${STRAPI_URL}/api/restaurants`;
+
+  try {
+    const res = await fetch(createUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwt}`,
+      },
+      // Strapi, veriyi bir 'data' objesi içinde bekler
+      body: JSON.stringify({ data: restaurantData }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error?.message || 'Restoran oluşturulamadı.');
+    }
+    return data.data;
+  } catch (error) {
+    console.error("Error in createRestaurant:", error);
+    throw error;
   }
 }

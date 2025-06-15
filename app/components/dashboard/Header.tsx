@@ -1,7 +1,7 @@
 // src/components/Header.tsx
 import { AppBar, Toolbar, Box, IconButton, Avatar, Typography } from '@mui/material';
 import { Bell, Settings } from 'lucide-react';
-import { Restaurant, StrapiAuthResponse, User } from '@/app/types/strapi';
+import { Restaurant, User } from '@/app/types/strapi';
 import { drawerWidth } from './Sidebar'; // Sidebar'dan genişliği import ediyoruz
 import RestaurantSwitcher from './RestaurantSwitcher';
 
