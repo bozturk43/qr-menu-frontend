@@ -57,28 +57,32 @@ export default function EditProductModal({ open, onClose, product, categories, i
     }, [product, open, reset, initialCategoryId]);
 
     const { mutate, isPending, error } = useMutation({
-        mutationFn: async (formData: ProductFormData) => {
-            // Bu fonksiyonun mantığı doğru ve aynı kalıyor
+        // mutationFn artık tüm verileri içeren tek bir obje alıyor
+        mutationFn: async ({ formData, currentNewFiles, currentExistingImages }: {
+            formData: ProductFormData;
+            currentNewFiles: File[];
+            currentExistingImages: StrapiMedia[];
+        }) => {
             const token = Cookies.get('jwt');
             if (!token) throw new Error('Not authenticated');
 
-            const newImageIds = newImageFiles.length > 0
-                ? await Promise.all(newImageFiles.map(file => uploadFile(file, token)))
+            // 1. Yeni seçilen dosyaları yükle
+            const newImageIds = currentNewFiles.length > 0
+                ? await Promise.all(currentNewFiles.map(file => uploadFile(file, token)))
                 : [];
 
-            const originalImageIds = product.images?.map(img => img.id) || [];
-            const currentImageIds = existingImages.map(img => img.id);
-            const disconnectedImageIds = originalImageIds.filter(id => !currentImageIds.includes(id));
+            // 2. Mevcut (silinmemiş) resimlerin ID'lerini al
+            const existingImageIds = currentExistingImages.map(img => img.id);
+
+            // 3. Nihai listeyi oluştur
+            const finalImageIds = [...existingImageIds, ...newImageIds];
 
             const updateData: UpdateProductData = {
                 name: formData.name,
                 price: +formData.price,
                 description: formData.description,
                 category: formData.category,
-                images: {
-                    connect: newImageIds.map(id => ({ id })),
-                    disconnect: disconnectedImageIds.map(id => ({ id })),
-                },
+                images: finalImageIds, // Strapi'ye artık doğru ve tam listeyi gönderiyoruz
             };
 
             return updateProduct(product.id, updateData, token);
@@ -89,7 +93,15 @@ export default function EditProductModal({ open, onClose, product, categories, i
         },
     });
 
-    const onSubmit = (data: ProductFormData) => mutate(data);
+    // onSubmit fonksiyonunu güncelliyoruz
+    const onSubmit = (formData: ProductFormData) => {
+        // mutate fonksiyonuna sadece formu değil, tüm gerekli state'leri içeren bir obje gönderiyoruz.
+        mutate({
+            formData: formData,
+            currentNewFiles: newImageFiles,
+            currentExistingImages: existingImages
+        });
+    };
     console.log(product);
 
     return (

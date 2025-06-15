@@ -61,3 +61,27 @@ export async function updateProduct(
     throw error;
   }
 }
+/**
+ * Mevcut bir ürünü güvenli bir şekilde siler.
+ */
+export async function deleteProduct(id: number, jwt: string): Promise<any> {
+  const deleteUrl = `${STRAPI_URL}/api/products/${id}/safe-delete`;
+
+  try {
+    const res = await fetch(deleteUrl, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error?.message || 'Ürün silinemedi.');
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error in deleteProduct:", error);
+    throw error;
+  }
+}

@@ -89,7 +89,7 @@ export interface Product {
   is_available: boolean;
   images?: StrapiMedia[];
   allergens?: Allergen[];
-  category:Category;
+  category: Category;
 }
 
 export interface Restaurant {
@@ -140,9 +140,7 @@ export interface UpdateProductData {
   price?: number;
   category?: number;
   is_available?: boolean;
-  images?: {
-    connect?: { id: number }[];
-    disconnect?: { id: number }[];
-  };
+  images?: number[];
+
 }
 

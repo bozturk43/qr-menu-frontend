@@ -16,6 +16,8 @@ export default function MenuDisplay({ slug }: { slug: string }) {
         queryFn: () => getRestaurantBySlug(slug),
     });
 
+    console.log(restaurant);
+
     if (isLoading) return <div className="text-center p-8">Yükleniyor...</div>;
     if (error) return <div className="text-center p-8 text-red-500">Hata oluştu.</div>;
     if (!restaurant) return <div className="text-center p-8">Restoran bulunamadı.</div>;

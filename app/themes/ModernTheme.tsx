@@ -3,7 +3,7 @@
 "use client"; // Sekmelere tıklama gibi kullanıcı etkileşimi olduğu için Client Component olmalı.
 
 import { useState, useEffect } from 'react';
-import type { Restaurant, StrapiCollection, } from "@/app/types/strapi";
+import type { Category, Restaurant, StrapiCollection, } from "@/app/types/strapi";
 
 // Bileşenin alacağı propların tipini belirliyoruz.
 interface ModernThemeProps {
@@ -14,6 +14,8 @@ export default function ModernTheme({ restaurant }: ModernThemeProps) {
   const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+
 
   useEffect(() => {
     if (restaurant.categories && restaurant.categories.length > 0) {
@@ -25,11 +27,19 @@ export default function ModernTheme({ restaurant }: ModernThemeProps) {
     (category) => category.id === activeCategoryId
   );
 
+  useEffect(() => {
+    if (restaurant?.categories) {
+      const sortedCategories = [...restaurant.categories].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+      setCategories(sortedCategories);
+    }
+  }, [restaurant]);
+
+
   return (
     <div className="bg-gray-900 min-h-screen text-white font-sans">
       <header className="p-8 text-center">
         {restaurant.logo && (
-          <img 
+          <img
             src={`${STRAPI_URL}${restaurant.logo.url}`}
             alt={`${restaurant.name} logo`}
             className="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-2 border-gray-700"
@@ -41,15 +51,14 @@ export default function ModernTheme({ restaurant }: ModernThemeProps) {
       <main className="container mx-auto px-4 pb-16">
         {/* Kategori Sekmeleri */}
         <nav className="flex justify-center space-x-2 sm:space-x-4 p-4 border-b border-gray-700 overflow-x-auto">
-          {restaurant.categories?.map((category) => (
+          {categories?.map((category) => (
             <button
               key={category.id}
               onClick={() => setActiveCategoryId(category.id)}
-              className={`py-2 px-4 rounded-md text-sm sm:text-base font-semibold transition-all duration-300 whitespace-nowrap ${
-                activeCategoryId === category.id
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              }`}
+              className={`py-2 px-4 rounded-md text-sm sm:text-base font-semibold transition-all duration-300 whitespace-nowrap ${activeCategoryId === category.id
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
             >
               {category.name}
             </button>
@@ -63,11 +72,11 @@ export default function ModernTheme({ restaurant }: ModernThemeProps) {
               {activeCategory.products?.map((product) => (
                 <div key={product.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform hover:scale-105 transition-transform duration-300">
                   {product.images && product.images.length > 0 && (
-                     <img 
-                        src={`${STRAPI_URL}${product.images[0].url}`} 
-                        alt={product.name}
-                        className="w-full h-56 object-cover"
-                     />
+                    <img
+                      src={`${STRAPI_URL}${product.images[0].url}`}
+                      alt={product.name}
+                      className="w-full h-56 object-cover"
+                    />
                   )}
                   <div className="p-6">
                     <h3 className="text-2xl font-bold">{product.name}</h3>

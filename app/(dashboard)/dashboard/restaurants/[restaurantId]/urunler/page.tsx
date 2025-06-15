@@ -1,17 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react'; // useState'i import ediyoruz
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { getRestaurantById } from '@/app/lib/api';
+import { deleteProduct, getRestaurantById } from '@/app/lib/api';
 
 // MUI & İkonlar
 import {
     Box, Typography, Button, Paper, CircularProgress, Alert, Avatar,
-    Accordion, AccordionSummary, AccordionDetails // YENİ: Accordion bileşenlerini import ediyoruz
+    Accordion, AccordionSummary, AccordionDetails, // YENİ: Accordion bileşenlerini import ediyoruz
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from '@mui/material';
-import { Add, Edit, ExpandMore as ExpandMoreIcon } from '@mui/icons-material'; // Açılır-kapanır ikonu için
+import { Add, Delete, Edit, ExpandMore as ExpandMoreIcon } from '@mui/icons-material'; // Açılır-kapanır ikonu için
 import { Category, Product, Restaurant } from '@/app/types/strapi';
 import AddProductModal from '@/app/components/dashboard/dialog-modals/AddProductModal';
 import EditProductModal from '@/app/components/dashboard/dialog-modals/EditProductModal';
@@ -19,6 +24,7 @@ import EditProductModal from '@/app/components/dashboard/dialog-modals/EditProdu
 export default function ProductsPage() {
     const params = useParams();
     const restaurantId = params.restaurantId as string;
+    const queryClient = useQueryClient();
     const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
     // Hangi accordion panelinin açık olduğunu tutmak için state
@@ -26,13 +32,25 @@ export default function ProductsPage() {
     const [expanded, setExpanded] = useState<number | false>(false);
     const [isModalOpen, setModalOpen] = useState(false);
     const [productToEdit, setProductToEdit] = useState<{ product: Product; category: Category } | null>(null);
-
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
 
     const { data: restaurant, isLoading, isError, error } = useQuery({
         queryKey: ['restaurant', restaurantId],
         queryFn: () => getRestaurantById(restaurantId, Cookies.get('jwt')!),
         enabled: !!restaurantId,
+    });
+
+    const deleteProductMutation = useMutation({
+        mutationFn: (productId: number) => deleteProduct(productId, Cookies.get('jwt')!),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+            setProductToDelete(null); // Onay kutusunu kapat
+        },
+        onError: (error) => {
+            alert(`Hata: ${error.message}`);
+        }
     });
 
     useEffect(() => {
@@ -43,8 +61,20 @@ export default function ProductsPage() {
         }
     }, [restaurant, expanded]);
 
+    useEffect(() => {
+        if (restaurant?.categories) {
+            const sortedCategories = [...restaurant.categories].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+            setCategories(sortedCategories);
+        }
+    }, [restaurant]);
+
     const handleChange = (panelId: number) => (event: React.SyntheticEvent, isExpanded: boolean) => {
         setExpanded(isExpanded ? panelId : false);
+    };
+    const handleDeleteConfirm = () => {
+        if (productToDelete) {
+            deleteProductMutation.mutate(productToDelete.id);
+        }
     };
 
 
@@ -67,8 +97,8 @@ export default function ProductsPage() {
 
             {/* Kategorilere göre gruplanmış ürün listesi - ARTIK ACCORDION İLE */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {restaurant.categories && restaurant.categories.length > 0 ? (
-                    restaurant.categories.map(category => (
+                {categories && categories.length > 0 ? (
+                    categories.map(category => (
                         <Accordion
                             key={category.id}
                             // Hangi panelin açık olduğunu state'imizle kontrol ediyoruz
@@ -106,6 +136,9 @@ export default function ProductsPage() {
                                                 <Button size="small" variant="outlined" startIcon={<Edit />} onClick={() => setProductToEdit({ product, category })}>
                                                     Düzenle
                                                 </Button>
+                                                <Button size="small" variant="outlined" color="error" startIcon={<Delete />} onClick={() => setProductToDelete(product)}>
+                                                    Sil
+                                                </Button>
                                             </Paper>
                                         ))}
                                     </Box>
@@ -137,6 +170,27 @@ export default function ProductsPage() {
                     restaurantId={restaurantId}
                 />
             )}
+            <Dialog
+                open={!!productToDelete}
+                onClose={() => setProductToDelete(null)}
+            >
+                <DialogTitle>Ürünü Silmeyi Onayla</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Emin misiniz? **"{productToDelete?.name}"** adlı ürün kalıcı olarak silinecektir.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setProductToDelete(null)}>İptal</Button>
+                    <Button
+                        onClick={handleDeleteConfirm}
+                        color="error"
+                        disabled={deleteProductMutation.isPending}
+                    >
+                        {deleteProductMutation.isPending ? 'Siliniyor...' : 'Evet, Sil'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
