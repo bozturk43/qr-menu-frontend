@@ -1,6 +1,6 @@
 {
   "name": "qr-menu-frontend",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -25,6 +25,7 @@
     "next": "15.3.3",
     "qs": "^6.14.0",
     "react": "^19.0.0",
+    "react-color": "^2.19.3",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.57.0"
   },
@@ -35,6 +36,7 @@
     "@types/node": "^20",
     "@types/qs": "^6.14.0",
     "@types/react": "^19",
+    "@types/react-color": "^3.0.13",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",

@@ -90,7 +90,7 @@ export interface Product {
   images?: StrapiMedia[];
   allergens?: Allergen[];
   category: Category;
-  display_order?:number;
+  display_order?: number;
 }
 
 export interface Restaurant {
@@ -105,11 +105,11 @@ export interface Restaurant {
   subscription_status: 'active' | 'inactive' | 'payment_failed';
   subscription_expires_at: string;
   owner?: User;
-  plan?: 'free' |'premium',
-  background_color_override:string,
-  text_color_override:string,
-  primary_color_override:string,
-  secondary_color_override:string,
+  plan?: 'free' | 'premium',
+  background_color_override: string,
+  text_color_override: string,
+  primary_color_override: string,
+  secondary_color_override: string,
 }
 
 //Category CRUD Modelleri
@@ -152,13 +152,17 @@ export interface UpdateProductData {
 //Restaurant CRUD Modelleri
 export interface NewRestaurantData {
   name: string;
-  logo?:number;
-  owner:number;
+  logo?: number;
+  owner: number;
 }
 export interface UpdateRestaurantData {
   name?: string;
   slug?: string;
   selected_theme?: number;
+  primary_color_override?: string; // Hex kodu
+  secondary_color_override?: string;
+  background_color_override?: string;
+  text_color_override?: string;
   logo?: number; // Yeni logo ID'si
 }
 
