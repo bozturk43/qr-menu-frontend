@@ -1,51 +1,81 @@
-"use client"
 // app/(dashboard)/restaurants/[restaurantId]/page.tsx
-import { redirect, useParams } from 'next/navigation';
+'use client';
+
+import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import Cookies from 'js-cookie';
 import { getRestaurantById } from '@/app/lib/api';
-import { Box, Typography, Paper, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Cookies from 'js-cookie'; // js-cookie kütüphanesini import ediyoruz
 
+// Bileşenleri ve ikonları import ediyoruz
+import { Box, Typography, CircularProgress, Alert, Paper } from '@mui/material';
+import StatCard from '@/app/components/dashboard/StatCard';
+import { LayoutGrid, ShoppingBasket } from 'lucide-react';
 
-// Bu sayfa bir Sunucu Bileşenidir
 export default function SingleRestaurantPage() {
-    const params = useParams();
-    const queryClient = useQueryClient(); // QueryClient'a erişim için
-    const restaurantId = params.restaurantId as string;
+  const params = useParams();
+  const restaurantId = params.restaurantId as string;
 
-    const { data: restaurant, isLoading, error } = useQuery({
-        queryKey: ['restaurant', restaurantId], // Bu anahtar bu veriyi eşsiz kılar
-        queryFn: () => {
-            const token = Cookies.get('jwt'); // Cookie'den token'ı alıyoruz
-            if (!token) throw new Error('Not authenticated');
-            return getRestaurantById(restaurantId, token);
-        },
-        enabled: !!restaurantId, // restaurantId varsa sorguyu çalıştır
-    });
+  const { data: restaurant, isLoading, isError, error } = useQuery({
+    queryKey: ['restaurant', restaurantId],
+    queryFn: () => getRestaurantById(restaurantId, Cookies.get('jwt')!),
+    enabled: !!restaurantId,
+  });
 
-    if (isLoading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-    if (error) {
-        return <Alert severity="error" sx={{ mt: 2 }}>{error.message}</Alert>;
-    }
-    if (!restaurant) {
-        return <Typography sx={{ mt: 2 }}>Restoran bulunamadı.</Typography>;
-    }
+  if (isLoading) return <CircularProgress />;
+  if (isError) return <Alert severity="error">{(error as Error).message}</Alert>;
+  if (!restaurant) return <Typography sx={{ mt: 2 }}>Restoran bulunamadı.</Typography>;
+  
+  // Kategori ve Ürün sayılarını hesaplayalım
+  const categoryCount = restaurant.categories?.length || 0;
+  const productCount = restaurant.categories?.reduce(
+    (total, category) => total + (category.products?.length || 0), 0
+  ) || 0;
 
-    return (
-        <Box>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-                {restaurant.name} - Genel Bakış
-            </Typography>
-            <Typography sx={{ mt: 2 }}>
-                Bu alanda restorana ait genel istatistikler ve hızlı işlemler yer alacak.
-            </Typography>
-            <Typography>Toplam Kategori Sayısı: {restaurant.categories?.length || 0}</Typography>
-        </Box>
-    );
+  return (
+    <Box>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+          {restaurant.name} - Genel Bakış
+        </Typography>
+        <Typography color="text.secondary">
+          Restoranınızın genel durumunu buradan takip edebilirsiniz.
+        </Typography>
+      </Box>
+
+      {/* YENİ KART YERLEŞİMİ (FLEXBOX İLE) */}
+      <Box 
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' }, // Küçük ekranda alt alta, büyükte yan yana
+          gap: 3, // Kartlar arası boşluk
+        }}
+      >
+        <StatCard 
+          title="Toplam Kategori"
+          value={categoryCount}
+          icon={<LayoutGrid />}
+          color="primary.main"
+        />
+        <StatCard 
+          title="Toplam Ürün"
+          value={productCount}
+          icon={<ShoppingBasket />}
+          color="secondary.main"
+        />
+      </Box>
+
+      {/* GELECEK İÇİN YER */}
+      <Box mt={6}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+          Detaylı İstatistikler
+        </Typography>
+        <Paper variant="outlined" sx={{p: 8, textAlign: 'center', color: 'text.secondary'}}>
+          {restaurant.plan === 'premium' 
+            ? 'Premium İstatistik Grafikleri Yakında Burada!'
+            : 'Detaylı istatistikler için Premium Plana geçin.'
+          }
+        </Paper>
+      </Box>
+    </Box>
+  );
 }

@@ -10,7 +10,7 @@ import { Home, User, DollarSign, HelpCircle } from 'lucide-react';
 const menuItems = [
   { name: 'Tüm Restoranlar', href: '/dashboard', icon: <Home size={20} /> },
   { name: 'Hesap Ayarları', href: '/dashboard/hesap', icon: <User size={20} /> },
-  { name: 'Abonelik & Faturalar', href: '/dashboard/abonelik', icon: <DollarSign size={20} /> },
+//   { name: 'Abonelik & Faturalar', href: '/dashboard/abonelik', icon: <DollarSign size={20} /> },
   { name: 'Yardım Merkezi', href: '/dashboard/yardim', icon: <HelpCircle size={20} /> },
 ];
 export const drawerWidth = 260; // Kenar çubuğu genişliğini bir sabit olarak tanımlıyoruz

@@ -1,7 +1,7 @@
 // src/lib/api/user.api.ts
 
 import { cookies } from 'next/headers';
-import type { User, Restaurant } from '@/app/types/strapi';
+import type { User, Restaurant, UpdateProfileData, ChangePasswordData } from '@/app/types/strapi';
 import qs from 'qs';
 
 // Strapi'den dönen user objesi, restoranları da içerecek şekilde genişletildi.
@@ -32,5 +32,63 @@ export async function getAuthenticatedUser(jwt: string): Promise<UserWithRestaur
     } catch (error) {
         console.error("Error in getAuthenticatedUser:", error);
         return null;
+    }
+}
+
+export async function updateUserProfile(
+    userId: number | string,
+    profileData: UpdateProfileData,
+    jwt: string
+): Promise<User> {
+    const updateUrl = `${STRAPI_URL}/api/users/${userId}`;
+
+    try {
+        const res = await fetch(updateUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${jwt}`,
+            },
+            body: JSON.stringify(profileData), // Strapi burada 'data' sarmalayıcısı beklemez
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error?.message || 'Profil güncellenemedi.');
+        }
+        return data;
+    } catch (error) {
+        console.error("Error in updateUserProfile:", error);
+        throw error;
+    }
+}
+/**
+ * Giriş yapmış kullanıcının şifresini değiştirir.
+ */
+export async function changePassword(
+    passwordData: ChangePasswordData,
+    jwt: string
+): Promise<User> {
+    const changePasswordUrl = `${STRAPI_URL}/api/auth/change-password`;
+
+    try {
+        const res = await fetch(changePasswordUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${jwt}`,
+            },
+            body: JSON.stringify(passwordData),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            // "Incorrect password" gibi hataları yakalamak için
+            throw new Error(data.error?.message || 'Şifre değiştirilemedi.');
+        }
+        return data;
+    } catch (error) {
+        console.error("Error in changePassword:", error);
+        throw error;
     }
 }

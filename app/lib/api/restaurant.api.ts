@@ -1,6 +1,6 @@
 // src/lib/api/restaurant.api.ts
 
-import { NewRestaurantData, Restaurant, StrapiCollection } from "@/app/types/strapi";
+import { NewRestaurantData, Restaurant, StrapiCollection, UpdateRestaurantData } from "@/app/types/strapi";
 import qs from "qs";
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
@@ -70,6 +70,7 @@ export async function getRestaurantById(
   // populateQuery nesnesini güncelliyoruz.
   const populateQuery = {
     logo: true, // 1. seviye: Restoranın logosu
+    selected_theme:true,
     categories: { // 1. seviye: Restoranın kategorileri
       populate: { // 2. seviye: Her bir kategorinin içini doldur
         image: true, // Kategorinin kendi resmi
@@ -185,7 +186,6 @@ export async function getRestaurantsByOwner(
     return [];
   }
 }
-
 /**
  * Yeni bir restoran oluşturur.
  */
@@ -213,6 +213,41 @@ export async function createRestaurant(
     return data.data;
   } catch (error) {
     console.error("Error in createRestaurant:", error);
+    throw error;
+  }
+}
+/**
+ * Mevcut bir restoranın bilgilerini günceller.
+ */
+export async function updateRestaurant(
+  restaurantId: number | string,
+  restaurantData: UpdateRestaurantData,
+  jwt: string
+): Promise<Restaurant> {
+  // Daha önce yazdığımız customUpdate endpoint'ini kullanabiliriz
+  // veya Strapi'nin standart PUT endpoint'ini kullanabiliriz.
+  // Standart olan daha basit.
+  console.log(restaurantData);
+  const updateUrl = `${STRAPI_URL}/api/restaurants/${restaurantId}/custom-update`;
+
+  try {
+    const res = await fetch(updateUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwt}`,
+      },
+      // Strapi, standart PUT'ta veriyi 'data' objesi içinde bekler
+      body: JSON.stringify({ data: restaurantData }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error?.message || 'Restoran güncellenemedi.');
+    }
+    return data.data;
+  } catch (error) {
+    console.error("Error in updateRestaurant:", error);
     throw error;
   }
 }
