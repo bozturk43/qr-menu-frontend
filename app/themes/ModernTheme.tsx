@@ -1,114 +1,146 @@
-// src/themes/ModernTheme.tsx
-
-"use client"; // Sekmelere tıklama gibi kullanıcı etkileşimi olduğu için Client Component olmalı.
+'use client';
 
 import { useState, useEffect } from 'react';
-import type { Category, Restaurant, StrapiCollection, } from "@/app/types/strapi";
+import useEmblaCarousel from 'embla-carousel-react';
+import { ThemeColorProvider, useThemeColors } from '@/app/context/ThemeColorContext';
+import type { Restaurant, Category, Product } from '@/app/types/strapi';
+import { Box, Typography, Avatar, Paper, Card, CardMedia, CardContent, IconButton } from '@mui/material';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-// Bileşenin alacağı propların tipini belirliyoruz.
-interface ModernThemeProps {
-  restaurant: StrapiCollection<Restaurant>;
-}
+// --- Alt Bileşenler ---
 
-export default function ModernTheme({ restaurant }: ModernThemeProps) {
+// Kategori Carousel'indeki tek bir kart
+const CategorySlide = ({ category, isSelected, onClick }: { category: Category, isSelected: boolean, onClick: () => void }) => {
+  const colors = useThemeColors();
   const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
-  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
+  return (
+    <Box sx={{ flex: '0 0 35%' }} onClick={onClick}>
+      <Card sx={{
+        cursor: 'pointer',
+        border: isSelected ? `2px solid ${colors.secondary}` :'',
+        transition: 'border 0.2s ease-in-out',
+        boxShadow: isSelected ? `0 0 15px ${colors.secondary}` : 'none'
+      }}>
+        <CardMedia
+          component="img"
+          image={category.image ? `${STRAPI_URL}${category.image.url}` : 'https://via.placeholder.com/150'}
+          alt={category.name}
+          sx={{ height: 80 }}
+        />
+        <Typography sx={{ p: 1, textAlign: 'center', fontWeight: 'bold', backgroundColor: `${colors.secondary}`, color: 'white' }}>
+          {category.name}
+        </Typography>
+      </Card>
+    </Box>
+  );
+}
+
+// Ürün Grid'indeki tek bir kart
+const ProductItem = ({ product }: { product: Product }) => {
+  const colors = useThemeColors();
+  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+  return (
+    <Card sx={{ backgroundColor: `${colors.primary}` }}>
+      <CardMedia
+        component="img"
+        image={product.images?.[0] ? `${STRAPI_URL}${product.images[0].url}` : 'https://via.placeholder.com/150'}
+        alt={product.name}
+        sx={{ height: 140 }}
+      />
+      <CardContent>
+        <Typography gutterBottom variant="h6" component="div" sx={{ fontWeight: 'bold', color: `${colors.text}` }}>
+          {product.name}
+        </Typography>
+        <Typography variant="body2" sx={{ color: `${colors.text}` }}>
+          {product.price} TL
+        </Typography>
+      </CardContent>
+    </Card>
+  )
+}
 
 
+// --- Ana Tema Bileşeni ---
+function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
+  const colors = useThemeColors();
+  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+
+  // Carousel için hook
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: 'start' });
+
+  // Seçili kategoriyi tutmak için state
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+
+  // Başlangıçta ilk kategoriyi seçili yap
   useEffect(() => {
     if (restaurant.categories && restaurant.categories.length > 0) {
-      setActiveCategoryId(restaurant.categories[0].id);
+      setSelectedCategoryId(restaurant.categories[0].id);
     }
   }, [restaurant.categories]);
 
-  const activeCategory = restaurant.categories?.find(
-    (category) => category.id === activeCategoryId
-  );
-
-  useEffect(() => {
-    if (restaurant?.categories) {
-      const sortedCategories = [...restaurant.categories].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-      setCategories(sortedCategories);
-    }
-  }, [restaurant]);
+  // Seçili kategoriye ait ürünleri filtrele
+  const displayedProducts = restaurant.categories?.find(c => c.id === selectedCategoryId)?.products || [];
+  const selectedCategoryName = restaurant.categories?.find(c => c.id === selectedCategoryId)?.name || '';
 
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white font-sans">
-      <header className="p-8 text-center">
-        {restaurant.logo && (
-          <img
-            src={`${STRAPI_URL}${restaurant.logo.url}`}
-            alt={`${restaurant.name} logo`}
-            className="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-2 border-gray-700"
-          />
-        )}
-        <h1 className="text-5xl font-extrabold tracking-tight">{restaurant.name}</h1>
+    <Box sx={{ bgcolor: colors.background, color: colors.text, minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
+      {/* Üst Header */}
+      <header className="p-4 flex items-center">
+        <Avatar src={restaurant.logo ? `${STRAPI_URL}${restaurant.logo.url}` : undefined} sx={{ width: 56, height: 56 }}>{restaurant.name.charAt(0)}</Avatar>
+        <Typography variant="h1" fontSize={"24px"}>{restaurant.name}</Typography>
       </header>
 
-      <main className="container mx-auto px-4 pb-16">
-        {/* Kategori Sekmeleri */}
-        <nav className="flex justify-center space-x-2 sm:space-x-4 p-4 border-b border-gray-700 overflow-x-auto">
-          {categories?.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategoryId(category.id)}
-              className={`py-2 px-4 rounded-md text-sm sm:text-base font-semibold transition-all duration-300 whitespace-nowrap ${activeCategoryId === category.id
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </nav>
-
-        {/* Aktif Kategorinin Ürünleri */}
-        <section className="mt-12">
-          {activeCategory ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-              {activeCategory.products?.map((product) => (
-                <div key={product.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform hover:scale-105 transition-transform duration-300">
-                  {product.images && product.images.length > 0 && (
-                    <img
-                      src={`${STRAPI_URL}${product.images[0].url}`}
-                      alt={product.name}
-                      className="w-full h-56 object-cover"
-                    />
-                  )}
-                  <div className="p-6">
-                    <h3 className="text-2xl font-bold">{product.name}</h3>
-                    {product.description && (
-                      <p className="text-gray-400 mt-2">{product.description}</p>
-                    )}
-                    <div className="flex justify-between items-center mt-4">
-                      <span className="text-2xl font-bold text-blue-400">{product.price} TL</span>
-                      {!product.is_available && (
-                        <span className="text-xs font-semibold bg-red-500/50 text-white px-2 py-1 rounded-full">Tükendi</span>
-                      )}
-                    </div>
-                    {/* Alerjenler */}
-                    {product.allergens && product.allergens.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2 items-center">
-                        <span className="text-xs text-gray-500">Alerjenler:</span>
-                        {product.allergens.map(allergen => (
-                          <span key={allergen.id} className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">
-                            {allergen.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+      {/* Kategori Carousel */}
+      <Box sx={{ position: 'relative', px: 2, mt: 2 }}>
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-4 pr-2">
+            {restaurant.categories
+              ?.slice() // Orijinal diziyi değiştirmemek için bir kopyasını oluştururuz
+              .sort((a, b) => (a.display_order || 0) -( b.display_order || 0)) // display_order'a göre küçükten büyüğe sıralarız
+              .map(category => (
+                <CategorySlide
+                  key={category.id}
+                  category={category}
+                  isSelected={selectedCategoryId === category.id}
+                  onClick={() => setSelectedCategoryId(category.id)}
+                />
               ))}
-            </div>
-          ) : (
-            <div className="text-center text-gray-500">Görüntülenecek ürün yok.</div>
-          )}
-        </section>
-      </main>
-    </div>
+          </div>
+        </div>
+      </Box>
+
+      {/* Ürünler Grid */}
+      <Box sx={{ p: 2, mt: 4 }}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>{selectedCategoryName}</Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+          {displayedProducts.map(product => (
+            <ProductItem key={product.id} product={product} />
+          ))}
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+
+// Ana sarmalayıcı bileşen. Renkleri hesaplar ve Context'i sağlar.
+export default function ModernTheme({ restaurant }: { restaurant: Restaurant }) {
+  const defaultColors = {
+    background: '#1A1A1D', text: '#F5F5F5', primary: '#2C2C31', secondary: '#4A4A52',
+  };
+
+  const finalColors = {
+    background: restaurant.background_color_override || defaultColors.background,
+    text: restaurant.text_color_override || defaultColors.text,
+    primary: restaurant.primary_color_override || defaultColors.primary,
+    secondary: restaurant.secondary_color_override || defaultColors.secondary,
+  };
+
+  return (
+    <ThemeColorProvider colors={finalColors}>
+      <ModernThemeContent restaurant={restaurant} />
+    </ThemeColorProvider>
   );
 }

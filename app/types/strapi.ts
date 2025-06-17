@@ -106,6 +106,10 @@ export interface Restaurant {
   subscription_expires_at: string;
   owner?: User;
   plan?: 'free' |'premium',
+  background_color_override:string,
+  text_color_override:string,
+  primary_color_override:string,
+  secondary_color_override:string,
 }
 
 //Category CRUD Modelleri

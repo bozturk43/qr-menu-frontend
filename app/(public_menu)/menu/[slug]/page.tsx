@@ -1,4 +1,4 @@
-// app/restaurant/[slug]/page.tsx
+// app(public_menu)/menu/[slug]/page.tsx
 
 import MenuDisplay from "./MenuDisplay"; // Yeni oluşturduğumuz bileşeni import et
 
