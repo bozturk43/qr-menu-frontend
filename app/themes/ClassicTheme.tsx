@@ -166,7 +166,7 @@ function ClassicThemeContent({ restaurant }: { restaurant: Restaurant }) {
                         <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
                           {product.name}
                         </Typography>
-                        <Typography variant="body1" sx={{ color: colors.primary, fontWeight: 'bold' }}>
+                        <Typography variant="body1" sx={{ color: colors.text, fontWeight: 'bold' }}>
                           {product.price} TL
                         </Typography>
                       </CardContent>

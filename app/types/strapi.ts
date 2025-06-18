@@ -159,10 +159,10 @@ export interface UpdateRestaurantData {
   name?: string;
   slug?: string;
   selected_theme?: number;
-  primary_color_override?: string; // Hex kodu
-  secondary_color_override?: string;
-  background_color_override?: string;
-  text_color_override?: string;
+  primary_color_override?: string | null; // Hex kodu
+  secondary_color_override?: string | null;
+  background_color_override?: string | null;
+  text_color_override?: string | null;
   logo?: number; // Yeni logo ID'si
 }
 

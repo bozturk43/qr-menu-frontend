@@ -18,7 +18,6 @@ export default function RestaurantDetailLayout({
         { label: "Genel Bakış", href: `/dashboard/restaurants/${restaurantId}` },
         { label: "Ürünler", href: `/dashboard/restaurants/${restaurantId}/urunler` },
         { label: "Kategoriler", href: `/dashboard/restaurants/${restaurantId}/kategoriler` },
-        { label: "Tema Ayarları", href: `/dashboard/restaurants/${restaurantId}/tema-ayarlari` },
         { label: "Restoran Ayarları", href: `/dashboard/restaurants/${restaurantId}/ayarlar` },
     ];
 
