@@ -163,7 +163,7 @@ export interface UpdateRestaurantData {
   secondary_color_override?: string | null;
   background_color_override?: string | null;
   text_color_override?: string | null;
-  logo?: number; // Yeni logo ID'si
+  logo?: number | null; // Yeni logo ID'si
 }
 
 //User CRUD Modeller

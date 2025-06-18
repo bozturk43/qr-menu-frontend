@@ -1,6 +1,6 @@
 {
   "name": "qr-menu-frontend",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -27,7 +27,8 @@
     "react": "^19.0.0",
     "react-color": "^2.19.3",
     "react-dom": "^19.0.0",
-    "react-hook-form": "^7.57.0"
+    "react-hook-form": "^7.57.0",
+    "react-qr-code": "^2.0.16"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

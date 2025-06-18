@@ -10,10 +10,14 @@ import { getRestaurantById } from '@/app/lib/api';
 import { Box, Typography, CircularProgress, Alert, Paper } from '@mui/material';
 import StatCard from '@/app/components/dashboard/StatCard';
 import { LayoutGrid, ShoppingBasket } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import QrCodeCard from '@/app/components/dashboard/QRCodeCard';
 
 export default function SingleRestaurantPage() {
   const params = useParams();
   const restaurantId = params.restaurantId as string;
+  const [menuUrl, setMenuUrl] = useState('');
+
 
   const { data: restaurant, isLoading, isError, error } = useQuery({
     queryKey: ['restaurant', restaurantId],
@@ -21,10 +25,18 @@ export default function SingleRestaurantPage() {
     enabled: !!restaurantId,
   });
 
+  useEffect(() => {
+    if (restaurant) {
+      // window.location.origin -> "http://localhost:3000" veya "https://www.siteadi.com"
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      setMenuUrl(`${origin}/menu/${restaurant.slug}`);
+    }
+  }, [restaurant]);
+
   if (isLoading) return <CircularProgress />;
   if (isError) return <Alert severity="error">{(error as Error).message}</Alert>;
   if (!restaurant) return <Typography sx={{ mt: 2 }}>Restoran bulunamadı.</Typography>;
-  
+
   // Kategori ve Ürün sayılarını hesaplayalım
   const categoryCount = restaurant.categories?.length || 0;
   const productCount = restaurant.categories?.reduce(
@@ -43,25 +55,28 @@ export default function SingleRestaurantPage() {
       </Box>
 
       {/* YENİ KART YERLEŞİMİ (FLEXBOX İLE) */}
-      <Box 
+      <Box
         sx={{
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row' }, // Küçük ekranda alt alta, büyükte yan yana
           gap: 3, // Kartlar arası boşluk
         }}
       >
-        <StatCard 
+        <StatCard
           title="Toplam Kategori"
           value={categoryCount}
           icon={<LayoutGrid />}
           color="primary.main"
         />
-        <StatCard 
+        <StatCard
           title="Toplam Ürün"
           value={productCount}
           icon={<ShoppingBasket />}
           color="secondary.main"
         />
+      </Box>
+      <Box sx={{ flex: 1, maxWidth: { xs: '100%', lg: '320px' } }}>
+        <QrCodeCard url={menuUrl} slug={restaurant.slug} />
       </Box>
 
       {/* GELECEK İÇİN YER */}
@@ -69,8 +84,8 @@ export default function SingleRestaurantPage() {
         <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
           Detaylı İstatistikler
         </Typography>
-        <Paper variant="outlined" sx={{p: 8, textAlign: 'center', color: 'text.secondary'}}>
-          {restaurant.plan === 'premium' 
+        <Paper variant="outlined" sx={{ p: 8, textAlign: 'center', color: 'text.secondary' }}>
+          {restaurant.plan === 'premium'
             ? 'Premium İstatistik Grafikleri Yakında Burada!'
             : 'Detaylı istatistikler için Premium Plana geçin.'
           }
