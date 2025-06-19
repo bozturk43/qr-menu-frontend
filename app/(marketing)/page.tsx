@@ -1,103 +1,95 @@
-import Image from "next/image";
+// app/(marketing)/page.tsx
 
-export default function Home() {
+import { getLandingPageData } from '@/app/lib/api';
+import { Box, Button, Container, Typography, Paper, Card, CardContent, Avatar } from '@mui/material';
+import { CheckCircle } from 'lucide-react';
+import Image from 'next/image'; // Next.js'in optimize edilmiş resim bileşeni
+
+export default async function LandingPage() {
+  const data = await getLandingPageData();
+  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+
+  // Eğer veri çekilemezse bir hata mesajı göster
+  if (!data) {
+    return <Box>Sayfa yüklenirken bir sorun oluştu.</Box>;
+  }
+
+  const { hero_title, hero_subtitle, hero_image, features } = data;
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <Box>
+      {/* 1. BÖLÜM: HERO SECTION */}
+      <Container maxWidth="xl" sx={{ pt: { xs: 12, md: 16 },mx:{md:0} }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', gap: 6 }}>
+          {/* Sol Taraf: Metinler ve Buton */}
+          <Box sx={{ flex: 1, textAlign: { xs: 'center', md: 'left' } }}>
+            <Typography 
+              component="h1" 
+              sx={{ 
+                fontFamily: 'Playfair Display, serif', 
+                fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
+                fontWeight: 800,
+                lineHeight: 1.1,
+                color: '#F8F7F4' 
+              }}
+            >
+              {hero_title || "Menünüzü Saniyeler İçinde Güncelleyin"}
+            </Typography>
+            <Typography sx={{ mt: 3, mb: 4, fontSize: { xs: '1rem', md: '1.25rem' }, color: '#F8F7F4' }}>
+              {hero_subtitle || "Kağıt masraflarına son verin, menünüzü anında güncelleyin ve müşterilerinize modern bir deneyim sunun."}
+            </Typography>
+            <Button href="/kayit-ol" variant="contained" color="secondary" size="large" sx={{ py: 1.5, px: 4, fontSize: '1.1rem' }}>
+              Ücretsiz Başlayın
+            </Button>
+          </Box>
+          
+          {/* Sağ Taraf: Resim */}
+          <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            {hero_image && (
+              <Paper elevation={12} sx={{ borderRadius: '16px', overflow: 'hidden' }}>
+                <Image
+                  src={`${STRAPI_URL}${hero_image.url}`}
+                  alt="QR Menü Uygulaması Ekran Görüntüsü"
+                  width={hero_image.width}
+                  height={hero_image.height}
+                  priority // Bu resmin öncelikli yüklenmesini sağlar
+                  style={{ maxWidth: '100%', height: 'auto' }}
+                />
+              </Paper>
+            )}
+          </Box>
+        </Box>
+      </Container>
+      
+      {/* 2. BÖLÜM: ÖZELLİKLER */}
+      <Box sx={{ py: { xs: 8, md: 16 } }}>
+        <Container maxWidth="lg">
+          <Typography variant="h3" component="h2" sx={{ textAlign: 'center', fontWeight: 'bold', mb: 8,color:"#f8f7f4" }}>
+            Neden QR Menü?
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 4 }}>
+            {features?.map((feature: any) => (
+              <Card key={feature.id} variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
+                <CardContent>
+                  {feature.icon && (
+                    <Avatar sx={{ mx: 'auto', mb: 2, width: 60, height: 60, bgcolor: 'secondary.main' }}>
+                      <Image src={`${STRAPI_URL}${feature.icon.url}`} alt={feature.title} width={32} height={32} />
+                    </Avatar>
+                  )}
+                  <Typography variant="h5" component="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {feature.title}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    {feature.description}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        </Container>
+      </Box>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      {/* TODO: Diğer bölümler (Nasıl Çalışır, Fiyatlandırma, Son Çağrı) buraya eklenecek */}
+    </Box>
   );
 }
