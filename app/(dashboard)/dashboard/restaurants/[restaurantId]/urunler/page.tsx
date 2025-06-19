@@ -21,9 +21,11 @@ import { Add, Delete, Edit, ExpandMore as ExpandMoreIcon, ArrowUpward, ArrowDown
 import { Category, Product, Restaurant } from '@/app/types/strapi';
 import AddProductModal from '@/app/components/dashboard/dialog-modals/AddProductModal';
 import EditProductModal from '@/app/components/dashboard/dialog-modals/EditProductModal';
+import { useSnackbar } from '@/app/context/SnackBarContext';
 
 export default function ProductsPage() {
     const params = useParams();
+    const {showSnackbar} = useSnackbar();
     const restaurantId = params.restaurantId as string;
     const queryClient = useQueryClient();
     const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
@@ -50,7 +52,7 @@ export default function ProductsPage() {
             setProductToDelete(null); // Onay kutusunu kapat
         },
         onError: (error) => {
-            alert(`Hata: ${error.message}`);
+            showSnackbar(`Hata: ${error.message}`,"error");
         }
     });
     const updateProductOrderMutation = useMutation({

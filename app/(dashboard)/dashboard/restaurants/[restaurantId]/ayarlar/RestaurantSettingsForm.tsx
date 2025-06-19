@@ -11,6 +11,7 @@ import { Box, Card, CardHeader, CardContent, TextField, Button, CardActions, Sel
 import { ChromePicker, ColorResult } from 'react-color';
 import { useEffect, useState } from 'react';
 import { ImagePlus, Trash2 } from 'lucide-react';
+import { useSnackbar } from '@/app/context/SnackBarContext';
 
 interface SettingsFormProps {
   restaurant: Restaurant;
@@ -47,7 +48,7 @@ function ColorPickerInput({ value, onChange }: { value: string | null | undefine
 
 export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps) {
   const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
-
+  const {showSnackbar} = useSnackbar();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [newLogoFile, setNewLogoFile] = useState<File | null>(null); const router = useRouter();
   const { control, handleSubmit, setValue, formState: { isDirty, dirtyFields } } = useForm<UpdateRestaurantData>({
@@ -74,7 +75,6 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
       // Eğer yeni bir logo dosyası seçilmişse, önce onu yükle
       if (newLogoFile) {
         const newLogoId = await uploadFile(newLogoFile, token);
-        console.log(newLogoId);
         finalData.logo = newLogoId;
       }
       // Eğer logo kaldırıldıysa, değeri null olarak ayarla
@@ -84,7 +84,7 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
       return updateRestaurant(restaurant.id, finalData, token);
     },
     onSuccess: () => {
-      alert('Ayarlar kaydedildi!');
+      showSnackbar('Ayarlar kaydedildi!','success');
       router.refresh();
     }
   });

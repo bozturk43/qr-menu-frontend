@@ -18,6 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Box, Typography, Button, Paper, List, ListItem, ListItemText, IconButton, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import { Add, DragHandle as DragHandleIcon, Delete, Edit } from '@mui/icons-material';
 import EditCategoryModal from '@/app/components/dashboard/dialog-modals/EditCategoryModal';
+import { useSnackbar } from '@/app/context/SnackBarContext';
 
 // Sürüklenebilir her bir kategori satırını temsil eden bileşen
 function SortableCategoryItem({ category, onEdit, onDelete }: { category: Category, onEdit: (category: Category) => void, onDelete: (category: Category) => void }) {
@@ -47,6 +48,7 @@ function SortableCategoryItem({ category, onEdit, onDelete }: { category: Catego
 
 export default function CategoriesPage() {
     const params = useParams();
+    const {showSnackbar} = useSnackbar();
     const queryClient = useQueryClient();
     const restaurantId = params.restaurantId as string;
     // Sıralanabilir kategorileri tutmak için lokal bir state
@@ -61,7 +63,7 @@ export default function CategoriesPage() {
             setCategoryToDelete(null); // Onay kutusunu kapat
         },
         onError: (error) => {
-            alert(`Hata: ${error.message}`); // Backend'den gelen hatayı göster
+            showSnackbar(`Hata: ${error.message}`,'error');
             setCategoryToDelete(null); // Hata sonrası onay kutusunu yine de kapat
 
         }

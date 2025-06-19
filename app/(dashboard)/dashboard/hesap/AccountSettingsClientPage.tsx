@@ -7,6 +7,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { changePassword, updateUserProfile } from '@/app/lib/api';
 import { useRouter } from 'next/navigation'; // useRouter'ı import ediyoruz
+import { useSnackbar } from '@/app/context/SnackBarContext';
+import { error } from 'console';
 
 
 
@@ -19,17 +21,24 @@ interface ClientPageProps {
 export default function AccountSettingsClientPage({ user }: ClientPageProps) {
   const queryClient = useQueryClient();
   const router = useRouter(); // Router'ı kullanıma hazırlıyoruz
+  const { showSnackbar } = useSnackbar();
 
 
-  const { control: profileControl, handleSubmit: handleProfileSubmit,reset:resetProfileForm, formState: { errors: profileErrors, isDirty } } = useForm<UpdateProfileData>({
+
+  const { control: profileControl, handleSubmit: handleProfileSubmit, reset: resetProfileForm, formState: { errors: profileErrors, isDirty } } = useForm<UpdateProfileData>({
     defaultValues: { username: user?.username || '', email: user?.email || '' }
   });
   const { mutate: updateProfileMutate, isPending: isProfilePending, isSuccess: isProfileSuccess, error: profileError } = useMutation({
     mutationFn: (data: UpdateProfileData) => updateUserProfile(user.id, data, Cookies.get('jwt')!),
-    onSuccess: () =>{
+    onSuccess: () => {
       router.refresh();
       resetProfileForm();
-    } 
+      showSnackbar('Profil bilgileri başarıyla güncellendi.', 'success');
+
+    },
+    onError: (error) => {
+      showSnackbar((error as Error).message, 'error');
+    }
   });
   const onProfileSubmit = (data: UpdateProfileData) => updateProfileMutate(data);
 
@@ -40,6 +49,10 @@ export default function AccountSettingsClientPage({ user }: ClientPageProps) {
     mutationFn: (data: ChangePasswordData) => changePassword(data, Cookies.get('jwt')!),
     onSuccess: () => {
       resetPasswordForm(); // Formu temizle
+      showSnackbar('Şifreniz başarıyla değiştirildi!', 'success', 4000); // 4 saniye göster
+    },
+    onError: (error) => {
+      showSnackbar((error as Error).message, 'error');
     }
   });
   const onPasswordSubmit = (data: ChangePasswordData) => changePasswordMutate(data);
@@ -50,12 +63,6 @@ export default function AccountSettingsClientPage({ user }: ClientPageProps) {
       <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 4 }}>
         Hesap Ayarları
       </Typography>
-
-      {isProfileSuccess && <Alert severity="success" sx={{ mb: 2 }}>Profil bilgileri başarıyla güncellendi.</Alert>}
-      {profileError && <Alert severity="error" sx={{ mb: 2 }}>{(profileError as Error).message}</Alert>}
-
-      {isPasswordSuccess && <Alert severity="success" sx={{ mb: 2 }}>Şifreniz başarıyla güncellendi.</Alert>}
-      {passwordError && <Alert severity="error" sx={{ mb: 2 }}>{(passwordError as Error).message}</Alert>}
 
       {/* --- GRID YERİNE YENİ FLEXBOX YAPISI --- */}
       <Box
@@ -94,22 +101,22 @@ export default function AccountSettingsClientPage({ user }: ClientPageProps) {
                   control={passwordControl}
                   rules={{ required: "Lütfen Mevcut Sifre Alanını Doldurun !" }}
                   render={({ field }) => (
-                    <TextField {...field} type='password' label="Mevcut Şifre" margin='normal' required fullWidth error={!!passwordErrors.currentPassword} helperText={passwordErrors.currentPassword?.message}/>
+                    <TextField {...field} type='password' label="Mevcut Şifre" margin='normal' required fullWidth error={!!passwordErrors.currentPassword} helperText={passwordErrors.currentPassword?.message} />
                   )}
                 />
                 <Controller
                   name='password'
                   control={passwordControl}
-                  rules={{ required: "Lütfen Yeni Sifre Alanını Doldurun !",minLength: { value: 6, message: 'Şifre en az 6 karakter olmalıdır.' } }}
+                  rules={{ required: "Lütfen Yeni Sifre Alanını Doldurun !", minLength: { value: 6, message: 'Şifre en az 6 karakter olmalıdır.' } }}
                   render={({ field }) => (
-                    <TextField {...field} required label="Yeni Şifre" type="password" fullWidth margin="normal" error={!!passwordErrors.password} helperText={passwordErrors.password?.message}/>
+                    <TextField {...field} required label="Yeni Şifre" type="password" fullWidth margin="normal" error={!!passwordErrors.password} helperText={passwordErrors.password?.message} />
 
                   )}
                 />
                 <Controller
                   name='passwordConfirmation'
                   control={passwordControl}
-                  rules={{ required: "Lütfen Sifre Onay Alanını Doldurun !",validate: (value) => value === getValues("password") || "Şifreler eşleşmiyor."  }}
+                  rules={{ required: "Lütfen Sifre Onay Alanını Doldurun !", validate: (value) => value === getValues("password") || "Şifreler eşleşmiyor." }}
                   render={({ field }) => (
                     <TextField {...field} required label="Yeni Şifre (Tekrar)" type="password" fullWidth margin="normal" error={!!passwordErrors.passwordConfirmation} helperText={passwordErrors.passwordConfirmation?.message} />
 
@@ -119,7 +126,7 @@ export default function AccountSettingsClientPage({ user }: ClientPageProps) {
               <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
                 <Button type="submit" variant="contained" disabled={isPasswordPending}>
                   {isPasswordPending ? "Güncelleniyor..." : "Şifreyi Değiştir"}
-                  
+
                 </Button>
               </CardActions>
             </Card>

@@ -7,6 +7,8 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import theme, { inter, playfair } from '@/app/theme'; // Özel tema ve fontlarımızı import ediyoruz
+import { Snackbar } from '@mui/material';
+import { SnackbarProvider } from './context/SnackBarContext';
 
 // React Query Yapılandırması (Sizin mevcut kodunuz)
 const queryClientConfig: QueryClientConfig = {
@@ -30,9 +32,11 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <AppRouterCacheProvider>
             <ThemeProvider theme={theme}>
-              {/* CssBaseline, MUI için temel stilleri sıfırlar */}
-              <CssBaseline />
-              {children}
+              <SnackbarProvider>
+                {/* CssBaseline, MUI için temel stilleri sıfırlar */}
+                <CssBaseline />
+                {children}
+              </SnackbarProvider>
             </ThemeProvider>
           </AppRouterCacheProvider>
         </QueryClientProvider>
