@@ -15,7 +15,7 @@ export default function MarketingLayout({
             {/* Header'ın sabit (fixed) olmasından dolayı içeriğin altına girmemesi için bir boşluk bırakıyoruz */}
             <Box component="main" sx={{
                 flexGrow: 1,
-                background: 'linear-gradient(45deg, #0D253F 40%, #FFAA00 90%)',
+                background: 'linear-gradient(45deg, #0D253F 50%, #FFAA00 90%)',
 
             }}>
                 {children}

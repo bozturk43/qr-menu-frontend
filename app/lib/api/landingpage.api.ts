@@ -14,6 +14,12 @@ export async function getLandingPageData(): Promise<any> {
         },
         testimonials: {
             populate: ['author_photo'], // Testimonial component'lerinin içindeki fotoğrafları da getir
+        },
+        feature_blocks:{
+            populate:['image']
+        },
+        pricing_tiers:{
+            populate:'*'
         }
     };
     // Bu sorgu objesini URL'e uygun bir string'e çeviriyoruz
