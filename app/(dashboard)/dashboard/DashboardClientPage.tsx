@@ -13,7 +13,7 @@ interface DashboardClientPageProps {
     user: User;
 }
 
-export default function DashboardClientPage({ restaurants,user }: DashboardClientPageProps) {
+export default function DashboardClientPage({ restaurants, user }: DashboardClientPageProps) {
     const [isAddModalOpen, setAddModalOpen] = useState(false);
     const [isUpgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
     const router = useRouter();
@@ -67,59 +67,73 @@ export default function DashboardClientPage({ restaurants,user }: DashboardClien
 
             {restaurants && restaurants.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {restaurants.map((restaurant) => (
-                        // Karta position: 'relative' ekliyoruz ki Chip'i ona göre konumlandıralım
-                        <Card key={restaurant.id} sx={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                            <CardContent sx={{ flexGrow: 1 }}>
-                                <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Chip
-                                        label={restaurant.plan === 'free' ? 'Free' : 'Premium'}
-                                        color={restaurant.plan === 'free' ? 'primary' : 'success'}
-                                        size="small"
-                                        sx={{ fontWeight: 'bold' }}
-                                    />
-                                    {restaurant.plan === 'free' && (
-                                        <Tooltip title="Premium'a Yükselt">
-                                            <IconButton size="small" onClick={() => handleUpgradeClick(restaurant)} sx={{ backgroundColor: 'rgba(255,255,255,0.7)' }}>
-                                                <UpgradeIcon fontSize="small" color="secondary" />
-                                            </IconButton>
-                                        </Tooltip>
-                                    )}
-                                </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                                    <Avatar
-                                        variant="rounded"
-                                        src={restaurant.logo ? `${STRAPI_URL}${restaurant.logo.url}` : undefined}
-                                        sx={{ width: 48, height: 48, bgcolor: restaurant.logo ? 'white' : 'primary.main' }}
-                                    >
-                                        {/* Eğer logo yoksa, baş harfi gösterir */}
-                                        {restaurant.name.charAt(0).toUpperCase()}
-                                    </Avatar>
-                                    <Box>
-                                        <Typography gutterBottom variant="h5" component="div">
-                                            {restaurant.name}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            /{restaurant.slug}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </CardContent>
+                    {restaurants.map((restaurant) => {
+                        const isFree = restaurant.plan === 'free';
+                        const isPremiumActive = restaurant.plan === 'premium' && restaurant.subscription_status === 'active';
+                        const isManageable = isFree || isPremiumActive;
 
-                            <CardActionArea
-                                component={Link}
-                                href={`/dashboard/restaurants/${restaurant.id}`}
-                            >
-                                <Button variant="contained" fullWidth color='secondary' sx={{ fontWeight: 'bold', borderRadius: "0" }}>Yönet</Button>
-                            </CardActionArea>
-                        </Card>
-                    ))}
+                        const href = isManageable ? `/dashboard/restaurants/${restaurant.id}` : `/dashboard/abonelik/yenile?restaurant_id=${restaurant.id}`;
+
+                        const chipLabel = isFree ? 'Free' : (isPremiumActive ? 'Premium' : 'Süresi Doldu');
+                        const chipColor: "primary" | "success" | "default" = isFree ? 'primary' : (isPremiumActive ? 'success' : 'default');
+
+                        return (
+                            // Karta position: 'relative' ekliyoruz ki Chip'i ona göre konumlandıralım
+                            <Card key={restaurant.id} sx={{ position: 'relative', display: 'flex', flexDirection: 'column',opacity:isManageable ? 1 : 0.7 }}>
+                                <CardContent sx={{ flexGrow: 1 }}>
+                                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Chip
+                                            label={chipLabel}
+                                            color={chipColor}
+                                            size="small"
+                                            sx={{ fontWeight: 'bold' }}
+                                        />
+                                        {restaurant.plan === 'free' && (
+                                            <Tooltip title="Premium'a Yükselt">
+                                                <IconButton size="small" onClick={() => handleUpgradeClick(restaurant)} sx={{ backgroundColor: 'rgba(255,255,255,0.7)' }}>
+                                                    <UpgradeIcon fontSize="small" color="secondary" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        )}
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                        <Avatar
+                                            variant="rounded"
+                                            src={restaurant.logo ? `${STRAPI_URL}${restaurant.logo.url}` : undefined}
+                                            sx={{ width: 48, height: 48, bgcolor: restaurant.logo ? 'white' : 'primary.main' }}
+                                        >
+                                            {/* Eğer logo yoksa, baş harfi gösterir */}
+                                            {restaurant.name.charAt(0).toUpperCase()}
+                                        </Avatar>
+                                        <Box>
+                                            <Typography gutterBottom variant="h5" component="div">
+                                                {restaurant.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                /{restaurant.slug}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </CardContent>
+
+                                <CardActionArea
+                                    component={Link}
+                                    href={href}
+                                >
+                                    <Button variant="contained" fullWidth color='secondary' sx={{ fontWeight: 'bold', borderRadius: "0" }}>Yönet</Button>
+                                </CardActionArea>
+                            </Card>
+                        )
+                    }
+
+
+                    )}
                 </div>
             ) : (
                 <Typography>Henüz bir restoran oluşturmadınız. Başlamak için butona tıklayın.</Typography>
             )}
 
-            <AddRestaurantModal open={isAddModalOpen} onClose={() => setAddModalOpen(false)} user={user}/>
+            <AddRestaurantModal open={isAddModalOpen} onClose={() => setAddModalOpen(false)} user={user} />
             <Dialog
                 open={isUpgradeDialogOpen}
                 onClose={() => setUpgradeDialogOpen(false)}

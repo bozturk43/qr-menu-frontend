@@ -2,42 +2,71 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose'; // jose kütüphanesinden doğrulama fonksiyonu
+import { jwtVerify } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET!; // .env.local'den gizli anahtarı alıyoruz
+const JWT_SECRET = process.env.JWT_SECRET!;
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+
+async function checkUserSubscription(token: string) {
+  try {
+    const res = await fetch(`${STRAPI_URL}/api/users/me?populate[restaurants][fields][0]=plan&populate[restaurants][fields][1]=subscription_status`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get('jwt')?.value;
+  const pathname = request.nextUrl.pathname;
   const loginUrl = new URL('/giris-yap', request.url);
+  const token = request.cookies.get('jwt')?.value;
 
-  // Eğer token yoksa, direkt giriş sayfasına yönlendir.
+  // Eğer zaten giriş veya kayıt sayfasındaysa, bir şey yapma
+  if (pathname.startsWith('/giris-yap') || pathname.startsWith('/kayit-ol')) {
+    return NextResponse.next();
+  }
+  
   if (!token) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Token var, şimdi geçerliliğini kontrol edelim.
   try {
-    // Token'ı ve gizli anahtarı kullanarak doğrulamayı dene.
-    // 'jose' kütüphanesi, süresi dolmuş veya imzası geçersiz token'lar için hata fırlatır.
+    // Token'ı doğrula
     await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
     
-    // Eğer buraya kadar geldiyse, token geçerlidir. İsteğin devam etmesine izin ver.
+    // Eğer dashboard veya alt sayfalarına gitmeye çalışıyorsa...
+    if (pathname.startsWith('/dashboard')) {
+        // ...abonelik durumunu kontrol et
+        const user = await checkUserSubscription(token);
+        const restaurants = user?.restaurants || [];
+
+        const hasRestaurants = restaurants.length > 0;
+        const hasManageableRestaurant = hasRestaurants && restaurants.some(
+            (r: any) => r.plan === 'free' || r.subscription_status === 'active'
+        );
+
+        // Eğer restoranları var ama yönetilebilir olanı yoksa VE zaten yenileme sayfasında değilse...
+        if (hasRestaurants && !hasManageableRestaurant && !pathname.startsWith('/dashboard/abonelik/yenile')) {
+            return NextResponse.redirect(new URL('/dashboard/abonelik/yenile', request.url));
+        }
+    }
+
+    // Token geçerliyse ve yönlendirme gerekmiyorsa, devam et
     return NextResponse.next();
 
-  } catch (error:any) {
-    // Eğer jwtVerify hata fırlatırsa (süre doldu, imza yanlış vb.),
-    // bu, token'ın geçersiz olduğu anlamına gelir.
-    console.log('Geçersiz Token:', error.message);
-    
-    // Kullanıcıyı giriş sayfasına yönlendir ve eski, geçersiz cookie'yi sil.
-    loginUrl.searchParams.set('redirected', 'true'); // İsteğe bağlı: Neden yönlendirildiğini belirtmek için
+  } catch (error) {
+    loginUrl.searchParams.set('redirected', 'true');
     const response = NextResponse.redirect(loginUrl);
-    response.cookies.set('jwt', '', { maxAge: 0 }); // Cookie'yi temizle
-    
+    response.cookies.set('jwt', '', { maxAge: 0 }); 
     return response;
   }
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  // Middleware'i, marketing sayfaları hariç, panel ve menü gibi alanlarda çalıştır
+  matcher: ['/dashboard/:path*', '/dashboard/abonelik/:path*'],
 };
