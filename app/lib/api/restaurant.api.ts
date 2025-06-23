@@ -70,13 +70,19 @@ export async function getRestaurantById(
   // populateQuery nesnesini güncelliyoruz.
   const populateQuery = {
     logo: true, // 1. seviye: Restoranın logosu
-    selected_theme:true,
+    selected_theme: true,
+    tables:true,
     categories: { // 1. seviye: Restoranın kategorileri
       populate: { // 2. seviye: Her bir kategorinin içini doldur
         image: true, // Kategorinin kendi resmi
         products: { // 2. seviye: Her bir kategorinin ürünleri
           populate: { // 3. seviye: Her bir ürünün içini doldur
             images: true,   // Ürünün resimleri
+            variations: {
+              populate: {
+                options: true,
+              }
+            },
             allergens: {  // Ürünün alerjenleri
               populate: { // 4. seviye: Her bir alerjenin içini doldur
                 icon: true // Alerjenin ikonu (varsa)

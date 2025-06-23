@@ -1,14 +1,15 @@
 // src/components/AddProductModal.tsx
 'use client';
 
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { createProduct, uploadFile } from '@/app/lib/api';
 import type { Category, NewProductData } from '@/app/types/strapi';
 
-import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box, Select, MenuItem, InputLabel, FormControl, Divider, Chip, Paper, Typography, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 
 interface AddProductModalProps {
     open: boolean;
@@ -23,6 +24,14 @@ type ProductFormData = {
     price: number;
     category: number; // Sadece ID'sini tutacağız
     images?: FileList;
+    variations: {
+        title: string;
+        type: 'single' | 'multiple';
+        options: {
+            name: string;
+            price_adjustment: number;
+        }[];
+    }[];
 };
 
 export default function AddProductModal({ open, onClose, restaurantId, categories }: AddProductModalProps) {
@@ -31,6 +40,11 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
     const { control, handleSubmit, reset, watch } = useForm<ProductFormData>();
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     const imageField = watch('images');
+
+    const { fields: variationFields, append: appendVariation, remove: removeVariation } = useFieldArray({
+        control,
+        name: 'variations',
+    });
 
     const { mutate, isPending, error } = useMutation({
         mutationFn: async (formData: ProductFormData) => {
@@ -45,6 +59,19 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
                 imageIds = await Promise.all(uploadPromises);
             }
 
+            const variationsForApi = formData.variations.map(variation => {
+                return {
+                    title: variation.title,
+                    type: variation.type,
+                    options: variation.options.map(option => {
+                        return {
+                            name: option.name,
+                            price_adjustment: +option.price_adjustment, // Sayı olduğundan emin olalım
+                        };
+                    })
+                };
+            });
+
             const productData: NewProductData = {
                 name: formData.name,
                 price: +formData.price, // Sayıya dönüştürdüğümüzden emin olalım
@@ -52,9 +79,11 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
                 category: formData.category,
                 images: imageIds,
                 is_available: true, // Varsayılan olarak mevcut
+                variations: variationsForApi,
+
             };
 
-            return createProduct(productData, token);
+            return createProduct(productData as NewProductData, token);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
@@ -122,6 +151,37 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
                             <input type="file" hidden multiple accept="image/*" onChange={(e) => onChange(e.target.files)} />
                         </Button>
                     )} />
+
+                    <Divider sx={{ my: 3 }}><Chip label="Ürün Varyasyonları" /></Divider>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {variationFields.map((field, index) => (
+                            <Paper key={field.id} variant="outlined" sx={{ p: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Typography sx={{ fontWeight: 'bold' }}>Varyasyon Grubu #{index + 1}</Typography>
+                                    <IconButton onClick={() => removeVariation(index)} color="error"><Trash2 size={18} /></IconButton>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Controller name={`variations.${index}.title`} control={control} rules={{ required: true }} render={({ field }) => <TextField {...field} label="Grup Başlığı (örn: Porsiyon)" size="small" sx={{ flex: 1 }} />} />
+                                    <Controller name={`variations.${index}.type`} control={control} defaultValue="single" render={({ field }) => (
+                                        <FormControl size="small" sx={{ flex: 1 }}>
+                                            <InputLabel>Seçim Tipi</InputLabel>
+                                            <Select {...field} label="Seçim Tipi">
+                                                <MenuItem value="single">Tekli Seçim</MenuItem>
+                                                <MenuItem value="multiple">Çoklu Seçim</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    )} />
+                                </Box>
+                                <Typography variant="body2" sx={{ mt: 2, mb: 1, fontWeight: 'medium' }}>Seçenekler:</Typography>
+                                <OptionsArray nestedIndex={index} control={control} />
+                            </Paper>
+                        ))}
+                    </Box>
+                    <Button startIcon={<PlusCircle size={16} />} onClick={() => appendVariation({ title: '', type: 'single', options: [] })} sx={{ mt: 2 }}>
+                        Varyasyon Grubu Ekle
+                    </Button>
+
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>İptal</Button>
@@ -132,4 +192,26 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
             </form>
         </Dialog>
     );
+}
+
+function OptionsArray({ nestedIndex, control }: { nestedIndex: number, control: any }) {
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: `variations.${nestedIndex}.options`
+    });
+
+    return (
+        <Box sx={{ pl: 2, borderLeft: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {fields.map((field, k) => (
+                <Box key={field.id} sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Controller name={`variations.${nestedIndex}.options.${k}.name`} control={control} rules={{ required: true }} render={({ field }) => <TextField {...field} label="Seçenek Adı" size="small" sx={{ flex: 2 }} />} />
+                    <Controller name={`variations.${nestedIndex}.options.${k}.price_adjustment`} control={control} rules={{ required: true }} render={({ field }) => <TextField {...field} label="Fiyat Farkı (+/-)" type="number" size="small" sx={{ flex: 1 }} />} />
+                    <IconButton onClick={() => remove(k)}><Trash2 size={16} /></IconButton>
+                </Box>
+            ))}
+            <Button size="small" startIcon={<PlusCircle size={16} />} onClick={() => append({ name: '', price_adjustment: 0 })} sx={{ alignSelf: 'flex-start' }}>
+                Seçenek Ekle
+            </Button>
+        </Box>
+    )
 }

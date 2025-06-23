@@ -45,6 +45,7 @@ export default function ProductsPage() {
         enabled: !!restaurantId,
     });
 
+
     const deleteProductMutation = useMutation({
         mutationFn: (productId: number) => deleteProduct(productId, Cookies.get('jwt')!),
         onSuccess: () => {

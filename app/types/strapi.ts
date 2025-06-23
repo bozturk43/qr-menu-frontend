@@ -81,6 +81,19 @@ export interface Theme {
   identifier: string;
 }
 
+export interface Option {
+  id: number;
+  name: string;
+  price_adjustment: number;
+}
+
+export interface VariationGroup {
+  id: number;
+  title: string;
+  type: 'single' | 'multiple';
+  options: Option[];
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -91,8 +104,13 @@ export interface Product {
   allergens?: Allergen[];
   category: Category;
   display_order?: number;
+  variations?: VariationGroup[];
 }
-
+export interface Table {
+  id:number;
+  name:string;
+  qr_code_identifier:string;
+}
 export interface Restaurant {
   id: number;
   name: string;
@@ -106,6 +124,7 @@ export interface Restaurant {
   subscription_expires_at: string;
   owner?: User;
   plan?: 'free' | 'premium',
+  tables:Table[],
   background_color_override: string,
   text_color_override: string,
   primary_color_override: string,
@@ -139,6 +158,14 @@ export interface NewProductData {
   category: number; // Ait olduğu kategorinin ID'si
   images?: number[]; // Yüklenecek resimlerin ID dizisi
   is_available?: boolean;
+  variations?: { // Component verisi bu formatta gönderilir
+    title: string;
+    type: 'single' | 'multiple';
+    options: {
+      name: string;
+      price_adjustment: number;
+    }[];
+  }[];
 }
 export interface UpdateProductData {
   name?: string;
@@ -147,6 +174,16 @@ export interface UpdateProductData {
   category?: number;
   is_available?: boolean;
   images?: number[];
+  variations?: {
+    id?: number; // Mevcut componentleri güncellemek için ID'leri de gönderebiliriz
+    title: string;
+    type: 'single' | 'multiple';
+    options: {
+      id?: number;
+      name: string;
+      price_adjustment: number;
+    }[];
+  }[];
 
 }
 //Restaurant CRUD Modelleri
