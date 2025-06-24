@@ -68,5 +68,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Middleware'i, marketing sayfaları hariç, panel ve menü gibi alanlarda çalıştır
-  matcher: ['/dashboard/:path*', '/dashboard/abonelik/:path*'],
+  matcher: ['/dashboard/:path*', '/dashboard/abonelik/:path*','/print/:path*'],
 };

@@ -213,3 +213,12 @@ export interface ChangePasswordData {
   password: string;
   passwordConfirmation: string;
 }
+
+//Table CRUD Modeller
+export interface NewTableData {
+  name: string;
+  restaurant: number; // Masanın hangi restorana ait olduğu
+}
+export interface UpdateTableData {
+  name?: string;
+}
