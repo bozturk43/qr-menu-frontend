@@ -4,8 +4,12 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ThemeColorProvider, useThemeColors } from '@/app/context/ThemeColorContext';
 import type { Restaurant, Category, Product } from '@/app/types/strapi';
-import { Box, Typography, Avatar, Paper, Card, CardMedia, CardContent, IconButton, TextField, InputAdornment } from '@mui/material';
+import { Box, Typography, Avatar, Paper, Card, CardMedia, CardContent, IconButton, TextField, InputAdornment, Button } from '@mui/material';
 import { ChevronLeft, ChevronRight, SearchIcon } from 'lucide-react';
+import { CartItem, useCartStore } from '../stores/cartStore';
+import ProductWithOptionsModal from '../components/menu/ProductWithOptionsModal';
+import CartFab from '../components/menu/CartFab';
+import CartDrawer from '../components/menu/CartDrawer';
 
 // --- Alt Bileşenler ---
 
@@ -39,9 +43,10 @@ const CategorySlide = ({ category, isSelected, onClick }: { category: Category, 
   );
 }
 
-const ProductItem = ({ product }: { product: Product }) => {
+const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddToCart: (product: Product) => void, plan?: string }) => {
   const colors = useThemeColors();
   const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+  console.log("plan",plan)
   return (
     <Card sx={{ backgroundColor: `${colors.primary}` }}>
       <CardMedia
@@ -58,6 +63,19 @@ const ProductItem = ({ product }: { product: Product }) => {
           {product.price} TL
         </Typography>
       </CardContent>
+      {plan === 'premium' && (
+        <Button
+          variant="contained"
+          sx={{
+            m: 1,
+            backgroundColor: colors.secondary,
+            '&:hover': { backgroundColor: '#5A67D8' }
+          }}
+          onClick={() => onAddToCart(product)}
+        >
+          Sepete Ekle
+        </Button>
+      )}
     </Card>
   )
 }
@@ -70,9 +88,29 @@ function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: 'start' });
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const addToCart = useCartStore((state) => state.addToCart);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isCartOpen, setCartOpen] = useState(false);
 
   // --- ARAMA İÇİN EKLENENLER BAŞLANGIÇ ---
   const [searchTerm, setSearchTerm] = useState('');
+
+  const handleAddToCartClick = (product: Product) => {
+    // Eğer ürünün varyasyonu yoksa, doğrudan sepete ekle
+    if (!product.variations || product.variations.length === 0) {
+      const newItem: CartItem = {
+        product: product,
+        quantity: 1,
+        selectedVariations: [],
+        uniqueId: `${product.id}-${Date.now()}` // Basit bir eşsiz ID
+      };
+      addToCart(newItem);
+      alert(`${product.name} sepete eklendi!`); // TODO: Snackbar ile değiştirilecek
+    } else {
+      // Eğer varyasyon varsa, modal'ı açmak için ürünü state'e ata
+      setSelectedProduct(product);
+    }
+  };
 
   const filteredCategories = useMemo(() => {
     if (!searchTerm.trim()) return restaurant.categories || [];
@@ -182,16 +220,22 @@ function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
           {/* Arama varsa filtrelenmişi, yoksa seçili kategoriyi göster */}
           {filteredCategories && (searchTerm.trim() ? filteredCategories?.flatMap(c => c.products || []) : displayedProducts)
             .map(product => (
-              <ProductItem key={product.id} product={product} />
+              <ProductItem key={product.id} product={product} onAddToCart={handleAddToCartClick} plan={restaurant.plan} />
             ))}
         </Box>
       </Box>
+      {selectedProduct && (
+        <ProductWithOptionsModal
+          product={selectedProduct}
+          open={!!selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
+      <CartFab onClick={() => setCartOpen(true)} />
+      <CartDrawer open={isCartOpen} onClose={() => setCartOpen(false)} />
     </Box>
   );
 }
-
-
-
 // Ana sarmalayıcı bileşen. Renkleri hesaplar ve Context'i sağlar.
 export default function ModernTheme({ restaurant }: { restaurant: Restaurant }) {
   const defaultColors = {
