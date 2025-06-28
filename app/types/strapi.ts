@@ -107,9 +107,9 @@ export interface Product {
   variations?: VariationGroup[];
 }
 export interface Table {
-  id:number;
-  name:string;
-  qr_code_identifier:string;
+  id: number;
+  name: string;
+  qr_code_identifier: string;
 }
 export interface Restaurant {
   id: number;
@@ -124,11 +124,32 @@ export interface Restaurant {
   subscription_expires_at: string;
   owner?: User;
   plan?: 'free' | 'premium',
-  tables:Table[],
+  tables: Table[],
   background_color_override: string,
   text_color_override: string,
   primary_color_override: string,
   secondary_color_override: string,
+}
+export interface OrderItem {
+  id: number;
+  quantity: number;
+  product_name: string;
+  selected_variations: string;
+  total_price: number;
+  is_printed: boolean;
+  order_item_status:'open' | 'paid';
+  product?: Product; // Her zaman populate edilmeyebilir
+}
+
+// Ana sipariş (adisyon) nesnesini temsil eder
+export interface Order {
+  id: number;
+  status: 'open' | 'paid' | 'canceled';
+  total_price: number;
+  notes?: string;
+  table?: Table;
+  restaurant?: Restaurant;
+  order_items: OrderItem[]; // Siparişin içindeki kalemlerin dizisi
 }
 
 //Category CRUD Modelleri
