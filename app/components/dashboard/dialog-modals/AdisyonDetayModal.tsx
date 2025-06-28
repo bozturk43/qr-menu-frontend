@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Order, Restaurant } from '@/app/types/strapi';
 import { closeOrder, deleteOrderItem, payOrderItems } from '@/app/lib/api';
 import Cookies from 'js-cookie';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, List, ListItem, ListItemText, Box, Divider, IconButton, Tooltip, Checkbox } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, List, ListItem, ListItemText, Box, Divider, IconButton, Tooltip, Checkbox, DialogContentText } from '@mui/material';
 import { Delete, Close, Add } from '@mui/icons-material';
 import { useSnackbar } from '@/app/context/SnackBarContext';
 import { useState } from 'react';
@@ -21,6 +21,8 @@ interface AdisyonDetayModalProps {
 export default function AdisyonDetayModal({ order, onClose, restaurant }: AdisyonDetayModalProps) {
     const [isAddItemModalOpen, setAddItemModalOpen] = useState(false);
     const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set());
+    const [paymentAction, setPaymentAction] = useState<'paySelected' | 'closeAll' | null>(null);
+
 
 
     const queryClient = useQueryClient();
@@ -38,21 +40,32 @@ export default function AdisyonDetayModal({ order, onClose, restaurant }: Adisyo
         onError: (error) => showSnackbar((error as Error).message, 'error'),
     });
     const payItemsMutation = useMutation({
-        mutationFn: () => payOrderItems(order!.id, Array.from(selectedItemIds), Cookies.get('jwt')!),
+        mutationFn: ({ itemIds, paymentMethod }: { itemIds: number[], paymentMethod: string }) => payOrderItems(order!.id, { itemIds, paymentMethod }, Cookies.get('jwt')!),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['openOrders', restaurant.id] });
             setSelectedItemIds(new Set()); // Seçimi sıfırla
             showSnackbar('Seçili ürünler ödendi.', 'success');
+            setPaymentAction(null); // Onay modalını kapat
+
         }
     });
     const closeOrderMutation = useMutation({
-        mutationFn: () => closeOrder(order!.id, Cookies.get('jwt')!),
+        mutationFn: (paymentMethod: string) => closeOrder(order!.id, { paymentMethod }, Cookies.get('jwt')!),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['openOrders', restaurant.id] });
             showSnackbar('Adisyon kapatıldı.', 'success');
+            setPaymentAction(null); // Onay modalını kapat
             onClose(); // Ana modal'ı kapat
         }
     });
+
+    const handlePaymentConfirm = (paymentMethod: 'cash' | 'card' | 'other') => {
+        if (paymentAction === 'paySelected') {
+            payItemsMutation.mutate({ itemIds: Array.from(selectedItemIds), paymentMethod });
+        } else if (paymentAction === 'closeAll') {
+            closeOrderMutation.mutate(paymentMethod);
+        }
+    };
     if (!order) return null;
 
 
@@ -110,18 +123,14 @@ export default function AdisyonDetayModal({ order, onClose, restaurant }: Adisyo
                     </Button>
                     <Box>
                         {/* YENİ: Parçalı Ödeme Butonu */}
-                        <Button variant="outlined" onClick={() => payItemsMutation.mutate()} disabled={selectedItemIds.size === 0 || payItemsMutation.isPending}>
+                        <Button variant="outlined" onClick={() => setPaymentAction('paySelected')} disabled={selectedItemIds.size === 0 || payItemsMutation.isPending}>
                             Seçilenleri Öde ({selectedTotal.toFixed(2)} TL)
                         </Button>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Typography variant="h5">Toplam: {(order.total_price - paidTotal).toFixed(2)} TL</Typography>
-                        <Button
-                            variant="contained"
-                            color="success"
-                            onClick={() => closeOrderMutation.mutate()}
-                            disabled={unpaidItems.length === 0 || closeOrderMutation.isPending}
-                        >
+                        <Button variant="contained" color="success" onClick={() => setPaymentAction('closeAll')} disabled={unpaidItems.length === 0 || closeOrderMutation.isPending}>
+
                             {closeOrderMutation.isPending ? "Kapatılıyor..." : "Tüm Hesabı Kapat"}
                         </Button>
                     </Box>
@@ -133,6 +142,25 @@ export default function AdisyonDetayModal({ order, onClose, restaurant }: Adisyo
                 order={order}
                 restaurant={restaurant}
             />
+            <Dialog
+                open={!!paymentAction}
+                onClose={() => setPaymentAction(null)}
+            >
+                <DialogTitle>Ödeme Yöntemini Seçin</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {paymentAction === 'paySelected'
+                            ? `${selectedTotal.toFixed(2)} TL tutarındaki kısmi ödeme hangi yöntemle yapılıyor?`
+                            : "Adisyonun kalan tutarını hangi yöntemle kapatmak istiyorsunuz?"
+                        }
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setPaymentAction(null)}>İptal</Button>
+                    <Button onClick={() => handlePaymentConfirm('cash')} variant="outlined" disabled={payItemsMutation.isPending || closeOrderMutation.isPending}>Nakit</Button>
+                    <Button onClick={() => handlePaymentConfirm('card')} variant="contained" disabled={payItemsMutation.isPending || closeOrderMutation.isPending}>Kart</Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

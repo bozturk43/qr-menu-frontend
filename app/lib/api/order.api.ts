@@ -103,14 +103,14 @@ export async function addItemsToOrder(
   }
 }
 
-export async function payOrderItems(orderId: number, itemIds: number[], jwt: string) {
+export async function payOrderItems(orderId: number, payload: { itemIds: number[], paymentMethod: string }, jwt: string) {
   const url = `${STRAPI_URL}/api/orders/${orderId}/pay-items`;
 
   try {
     const res = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
-      body: JSON.stringify({ itemIds }),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
@@ -126,14 +126,18 @@ export async function payOrderItems(orderId: number, itemIds: number[], jwt: str
   }
 }
 
-export async function closeOrder(orderId: number, jwt: string) {
+export async function closeOrder(orderId: number, payload: { paymentMethod: string }, jwt: string) {
   const url = `${STRAPI_URL}/api/orders/${orderId}/close`;
 
-  
+
   try {
     const res = await fetch(url, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${jwt}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwt}`
+      },
+      body: JSON.stringify(payload)
     });
 
     const data = await res.json();
