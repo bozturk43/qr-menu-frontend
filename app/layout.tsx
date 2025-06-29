@@ -2,13 +2,12 @@
 
 import './globals.css';
 import { QueryClient, QueryClientProvider, QueryClientConfig } from "@tanstack/react-query";
-
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import theme, { inter, playfair } from '@/app/theme'; // Özel tema ve fontlarımızı import ediyoruz
-import { Snackbar } from '@mui/material';
 import { SnackbarProvider } from './context/SnackBarContext';
+
 
 // React Query Yapılandırması (Sizin mevcut kodunuz)
 const queryClientConfig: QueryClientConfig = {

@@ -123,12 +123,16 @@ export interface Restaurant {
   subscription_status: 'active' | 'inactive' | 'payment_failed';
   subscription_expires_at: string;
   owner?: User;
-  plan?: 'free' | 'premium',
+  plan?: 'free' | 'pro' | 'bussiness',
   tables: Table[],
   background_color_override: string,
   text_color_override: string,
   primary_color_override: string,
   secondary_color_override: string,
+  show_restaurant_name?: boolean,
+  font_title?: string,
+  font_body?:string,
+
 }
 export interface OrderItem {
   id: number;
@@ -137,7 +141,7 @@ export interface OrderItem {
   selected_variations: string;
   total_price: number;
   is_printed: boolean;
-  order_item_status:'open' | 'paid';
+  order_item_status: 'open' | 'paid';
   product?: Product; // Her zaman populate edilmeyebilir
 }
 
@@ -222,6 +226,9 @@ export interface UpdateRestaurantData {
   background_color_override?: string | null;
   text_color_override?: string | null;
   logo?: number | null; // Yeni logo ID'si
+  show_restaurant_name?: boolean;
+  font_title?: string;
+  font_body?:string;
 }
 
 //User CRUD Modeller

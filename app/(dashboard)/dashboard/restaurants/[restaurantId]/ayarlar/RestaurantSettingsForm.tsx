@@ -136,7 +136,7 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
       setLogoPreview(restaurant.logo ? `${STRAPI_URL}${restaurant.logo.url}` : null);
     }
   }, [restaurant]);
-  const isPremium = restaurant.plan === 'premium';
+  const isPremium = restaurant.plan === 'pro' || restaurant.plan === 'bussiness';
 
 
   return (
@@ -183,66 +183,6 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
               )}
             </Box>
           </Box>
-          <Typography variant='h6' sx={{ mt: 2, borderTop: 1, borderColor: 'divider', pt: 3 }}>
-            Renk Özelleştirme {!isPremium && <Chip label="Premium Özellik" color="secondary" size="small" />}
-          </Typography>
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2,1fr)',
-            gap: 3,
-            mt: 4,
-            opacity: isPremium ? 1 : 0.6,
-            pointerEvents: isPremium ? 'auto' : 'none'
-          }} >
-            {/* Renk seçiciler, plan 'premium' değilse pasif (disabled) olacak */}
-            <Controller name="primary_color_override"
-              control={control}
-              render={({ field }) =>
-                <FormControl fullWidth>
-                  <Typography variant="caption">Ana Renk</Typography>
-                  <ColorPickerInput {...field} />
-                </FormControl>
-              }
-              disabled={!isPremium} />
-            <Controller name="secondary_color_override"
-              control={control}
-              render={({ field }) =>
-                <FormControl fullWidth>
-                  <Typography variant="caption">Vurgu Rengi</Typography>
-                  <ColorPickerInput {...field} />
-                </FormControl>
-              }
-              disabled={!isPremium} />
-            <Controller
-              name="background_color_override"
-              control={control}
-              render={({ field }) =>
-                <FormControl fullWidth>
-                  <Typography variant="caption">Arka Plan Rengi</Typography>
-                  <ColorPickerInput {...field} />
-                </FormControl>
-              }
-              disabled={!isPremium} />
-            <Controller
-              name="text_color_override"
-              control={control}
-              render={({ field }) =>
-                <FormControl fullWidth>
-                  <Typography variant="caption">Metin Rengi</Typography>
-                  <ColorPickerInput {...field} />
-                </FormControl>
-              }
-              disabled={!isPremium} />
-          </Box>
-          <Tooltip title="Tüm renk özelleştirmelerini kaldırıp temanın varsayılan renklerine dön.">
-            {/* Butonun tıklanabilirliği de premium durumuna bağlı */}
-            <span>
-              <Button variant="outlined" size="small" onClick={handleResetColors} disabled={!isPremium}>
-                Renkleri Sıfırla
-              </Button>
-            </span>
-          </Tooltip>
-          {/* TODO: Logo güncelleme alanı eklenecek */}
         </CardContent>
         <CardActions sx={{ p: 2, justifyContent: 'flex-end' }}>
           <Button type="submit" variant="contained" disabled={!isDirty || isPending}>

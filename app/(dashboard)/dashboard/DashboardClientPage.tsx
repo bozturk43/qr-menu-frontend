@@ -32,7 +32,7 @@ export default function DashboardClientPage({ restaurants, user }: DashboardClie
     const handleAddNewRestaurantClick = () => {
         // Kullanıcının ücretsiz restoran hakkı var mı?
         // (Henüz hiç restoranı yoksa veya olanların hepsi premium ise)
-        const hasFreeSlot = restaurants.every(r => r.plan === 'premium');
+        const hasFreeSlot = restaurants.every(r => r.plan === 'pro');
         if (hasFreeSlot) {
             setAddModalOpen(true);
         } else {
@@ -69,12 +69,12 @@ export default function DashboardClientPage({ restaurants, user }: DashboardClie
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {restaurants.map((restaurant) => {
                         const isFree = restaurant.plan === 'free';
-                        const isPremiumActive = restaurant.plan === 'premium' && restaurant.subscription_status === 'active';
+                        const isPremiumActive = (restaurant.plan === 'pro' || restaurant.plan === 'bussiness') && restaurant.subscription_status === 'active';
                         const isManageable = isFree || isPremiumActive;
 
                         const href = isManageable ? `/dashboard/restaurants/${restaurant.id}` : `/dashboard/abonelik/yenile?restaurant_id=${restaurant.id}`;
 
-                        const chipLabel = isFree ? 'Free' : (isPremiumActive ? 'Premium' : 'Süresi Doldu');
+                        const chipLabel = isFree ? 'Free' : (isPremiumActive ? restaurant.plan : 'Süresi Doldu');
                         const chipColor: "primary" | "success" | "default" = isFree ? 'primary' : (isPremiumActive ? 'success' : 'default');
 
                         return (
