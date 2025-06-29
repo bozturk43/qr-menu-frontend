@@ -6,10 +6,11 @@ import type { Order, Restaurant } from '@/app/types/strapi';
 import { closeOrder, deleteOrderItem, payOrderItems } from '@/app/lib/api';
 import Cookies from 'js-cookie';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, List, ListItem, ListItemText, Box, Divider, IconButton, Tooltip, Checkbox, DialogContentText } from '@mui/material';
-import { Delete, Close, Add } from '@mui/icons-material';
+import { Delete, Close, Add, Discount } from '@mui/icons-material';
 import { useSnackbar } from '@/app/context/SnackBarContext';
 import { useState } from 'react';
 import AddItemToOrderModal from './AddItemToOrder';
+import DiscountModal from './DiscountModal';
 
 interface AdisyonDetayModalProps {
     order: Order | null;
@@ -22,6 +23,8 @@ export default function AdisyonDetayModal({ order, onClose, restaurant }: Adisyo
     const [isAddItemModalOpen, setAddItemModalOpen] = useState(false);
     const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set());
     const [paymentAction, setPaymentAction] = useState<'paySelected' | 'closeAll' | null>(null);
+    const [isDiscountModalOpen, setDiscountModalOpen] = useState(false);
+
 
 
 
@@ -121,6 +124,9 @@ export default function AdisyonDetayModal({ order, onClose, restaurant }: Adisyo
                     >
                         Ürün Ekle
                     </Button>
+                    <Button variant="outlined" startIcon={<Discount />} onClick={() => setDiscountModalOpen(true)} color="info">
+                        İndirim Uygula
+                    </Button>
                     <Box>
                         {/* YENİ: Parçalı Ödeme Butonu */}
                         <Button variant="outlined" onClick={() => setPaymentAction('paySelected')} disabled={selectedItemIds.size === 0 || payItemsMutation.isPending}>
@@ -161,6 +167,12 @@ export default function AdisyonDetayModal({ order, onClose, restaurant }: Adisyo
                     <Button onClick={() => handlePaymentConfirm('card')} variant="contained" disabled={payItemsMutation.isPending || closeOrderMutation.isPending}>Kart</Button>
                 </DialogActions>
             </Dialog>
+            <DiscountModal
+                open={isDiscountModalOpen}
+                onClose={() => setDiscountModalOpen(false)}
+                orderId={order.id}
+                restaurantId={restaurant.id}
+            />
         </>
     );
 }

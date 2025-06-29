@@ -11,6 +11,10 @@ export interface AddItemsPayload {
     variations: string;
   }[];
 }
+export interface ApplyDiscountPayload {
+  discount_type: 'percentage' | 'fixed_amount';
+  discount_value: number;
+}
 
 
 export async function submitOrder(orderPayload: any) {
@@ -149,6 +153,33 @@ export async function closeOrder(orderId: number, payload: { paymentMethod: stri
 
   } catch (error) {
     console.error("Error in closeOrder:", error);
+    throw error;
+  }
+}
+export async function applyDiscountToOrder(
+  orderId: number | string,
+  payload: ApplyDiscountPayload,
+  jwt: string
+): Promise<Order> {
+  const url = `${STRAPI_URL}/api/orders/${orderId}/apply-discount`;
+
+  try {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error?.message || 'İndirim uygulanamadı.');
+    }
+    return data.data; // Controller'ımız güncellenmiş siparişi döndürüyor
+  } catch (error) {
+    console.error("Error in applyDiscountToOrder:", error);
     throw error;
   }
 }
