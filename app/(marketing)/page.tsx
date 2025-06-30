@@ -9,7 +9,6 @@ import { getStrapiMedia } from '../lib/utils';
 
 export default async function LandingPage() {
   const data = await getLandingPageData();
-  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
   // Eğer veri çekilemezse bir hata mesajı göster
   if (!data) {

@@ -18,7 +18,6 @@ import { getStrapiMedia } from '../lib/utils';
 // --- Alt Bileşenler (Değişiklik yok) ---
 const CategorySlide = ({ category, isSelected, onClick }: { category: Category, isSelected: boolean, onClick: () => void }) => {
   const colors = useThemeColors();
-  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
   return (
     // Önceki kodda flex: '0 0 35%' idi, mobil uyumluluk için biraz daha küçük olabilir.
     // Örn: '0 0 140px' veya responsive bir değer. Şimdilik aynı bırakıyorum.
@@ -46,8 +45,6 @@ const CategorySlide = ({ category, isSelected, onClick }: { category: Category, 
 
 const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddToCart: (product: Product) => void, plan?: string }) => {
   const colors = useThemeColors();
-  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
-  console.log("plan",plan)
   return (
     <Card sx={{ backgroundColor: `${colors.primary}` }}>
       <CardMedia

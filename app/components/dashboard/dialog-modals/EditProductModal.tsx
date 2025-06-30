@@ -46,7 +46,6 @@ type ProductFormData = {
 
 export default function EditProductModal({ open, onClose, product, categories, initialCategoryId, restaurantId }: EditProductModalProps) {
     const queryClient = useQueryClient();
-    const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
     const { control, handleSubmit, reset} = useForm<ProductFormData>();
     const { fields: variationFields, append: appendVariation, remove: removeVariation } = useFieldArray({

@@ -12,7 +12,6 @@ interface FeatureGridProps {
 }
 
 export default function FeatureGrid({ blocks }: FeatureGridProps) {
-    const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
     return (
         <Box
