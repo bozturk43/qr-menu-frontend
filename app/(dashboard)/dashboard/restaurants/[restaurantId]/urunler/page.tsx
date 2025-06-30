@@ -22,14 +22,14 @@ import { Category, Product } from '@/app/types/strapi';
 import AddProductModal from '@/app/components/dashboard/dialog-modals/AddProductModal';
 import EditProductModal from '@/app/components/dashboard/dialog-modals/EditProductModal';
 import { useSnackbar } from '@/app/context/SnackBarContext';
+import { getStrapiMedia } from '@/app/lib/utils';
 
 export default function ProductsPage() {
     const params = useParams();
     const {showSnackbar} = useSnackbar();
     const restaurantId = params.restaurantId as string;
     const queryClient = useQueryClient();
-    const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
-
+    
     // Hangi accordion panelinin açık olduğunu tutmak için state
     // İlk kategorinin ID'sini veya index'ini vererek varsayılan olarak açık gelmesini sağlayabiliriz.
     const [expanded, setExpanded] = useState<number | false>(false);
@@ -161,7 +161,7 @@ export default function ProductsPage() {
                                                 <Paper key={product.id} variant="outlined" sx={{ display: 'flex', alignItems: 'center', p: 2, gap: 2 }}>
                                                     <Avatar
                                                         variant="rounded"
-                                                        src={product.images?.[0] ? `${STRAPI_URL}${product.images[0].url}` : undefined}
+                                                        src={product.images?.[0] ? getStrapiMedia(product.images[0]) : undefined}
                                                         sx={{ width: 56, height: 56 }}
                                                     >
                                                         {product.name.charAt(0)}

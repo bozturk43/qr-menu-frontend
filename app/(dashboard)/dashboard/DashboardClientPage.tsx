@@ -6,6 +6,7 @@ import { Box, Typography, Button, Card, CardActionArea, CardContent, Chip, Dialo
 import { Add, StarBorder as UpgradeIcon } from '@mui/icons-material';
 import { Restaurant, User } from '@/app/types/strapi';
 import AddRestaurantModal from '@/app/components/dashboard/dialog-modals/AddRestauranModal';
+import { getStrapiMedia } from '@/app/lib/utils';
 
 interface DashboardClientPageProps {
     restaurants: Restaurant[];
@@ -15,9 +16,6 @@ interface DashboardClientPageProps {
 export default function DashboardClientPage({ restaurants, user }: DashboardClientPageProps) {
     const [isAddModalOpen, setAddModalOpen] = useState(false);
     const [isUpgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
-
-    const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
-
 
     const handleUpgradeClick = (restaurant: Restaurant) => {
         // Mevcut bir restoranı yükseltmek için de aynı uyarıyı gösterebiliriz
@@ -97,7 +95,7 @@ export default function DashboardClientPage({ restaurants, user }: DashboardClie
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                                         <Avatar
                                             variant="rounded"
-                                            src={restaurant.logo ? `${STRAPI_URL}${restaurant.logo.url}` : undefined}
+                                            src={restaurant.logo ? getStrapiMedia(restaurant.logo) : undefined}
                                             sx={{ width: 48, height: 48, bgcolor: restaurant.logo ? 'white' : 'primary.main' }}
                                         >
                                             {/* Eğer logo yoksa, baş harfi gösterir */}

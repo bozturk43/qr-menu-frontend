@@ -82,7 +82,6 @@ const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddTo
 // --- Ana Tema Bileşeni ---
 function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
   const colors = useThemeColors();
-  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: 'start' });
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -143,7 +142,7 @@ function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
   return (
     <Box sx={{ bgcolor: colors.background, color: colors.text, minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       <header className="p-4 flex flex-col items-center gap-4">
-        <Avatar src={restaurant.logo ? `${STRAPI_URL}${restaurant.logo.url}` : undefined} sx={{ width: 56, height: 56 }}>{restaurant.name.charAt(0)}</Avatar>
+        <Avatar src={restaurant.logo ? getStrapiMedia(restaurant.logo) : undefined} sx={{ width: 56, height: 56 }}>{restaurant.name.charAt(0)}</Avatar>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', textAlign: 'center' }}>{restaurant.name}</Typography>
 
         {/* YENİ ARAMA ÇUBUĞU */}

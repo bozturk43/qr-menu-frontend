@@ -11,7 +11,6 @@ import { getStrapiMedia } from '../lib/utils';
 // --- Ana Tema İçeriği Bileşeni ---
 function ClassicThemeContent({ restaurant }: { restaurant: Restaurant }) {
   const colors = useThemeColors();
-  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
   // İki state'imiz var:
   // 1. Hangi görünümde olduğumuzu tutar ('categories' veya 'products')
@@ -49,7 +48,7 @@ function ClassicThemeContent({ restaurant }: { restaurant: Restaurant }) {
   return (
     <Box sx={{ bgcolor: colors.background, color: colors.text, minHeight: '100vh' }}>
       <header className="p-6 text-center">
-        <Avatar src={restaurant.logo ? `${STRAPI_URL}${restaurant.logo.url}` : undefined} sx={{ width: 90, height: 90, mx: 'auto', mb: 2, border: `3px solid ${colors.primary}` }}>
+        <Avatar src={restaurant.logo ? getStrapiMedia(restaurant.logo) : undefined} sx={{ width: 90, height: 90, mx: 'auto', mb: 2, border: `3px solid ${colors.primary}` }}>
           {restaurant.name.charAt(0)}
         </Avatar>
         <Typography variant="h3" component="h1" sx={{ fontFamily: 'Playfair Display, serif', fontWeight: 'bold', color: colors.primary }}>
