@@ -11,6 +11,8 @@ import ProductWithOptionsModal from '../components/menu/ProductWithOptionsModal'
 import CartFab from '../components/menu/CartFab';
 import CartDrawer from '../components/menu/CartDrawer';
 import { getStrapiMedia } from '../lib/utils';
+import { inter, playfair } from '@/app/theme'; // Varsayılan fontlar için
+
 
 // --- Alt Bileşenler ---
 
@@ -43,10 +45,44 @@ const CategorySlide = ({ category, isSelected, onClick }: { category: Category, 
   );
 }
 
-const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddToCart: (product: Product) => void, plan?: string }) => {
-  const colors = useThemeColors();
+// const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddToCart: (product: Product) => void, plan?: string }) => {
+//   const colors = useThemeColors();
+//   return (
+//     <Card sx={{ backgroundColor: `${colors.primary}` }}>
+//       <CardMedia
+//         component="img"
+//         image={product.images?.[0] ? getStrapiMedia(product.images[0]) : 'https://via.placeholder.com/150'}
+//         alt={product.name}
+//         sx={{ height: 140 }}
+//       />
+//       <CardContent>
+//         <Typography gutterBottom variant="h6" component="div" sx={{ fontWeight: 'bold', color: `${colors.text}` }}>
+//           {product.name}
+//         </Typography>
+//         <Typography variant="body2" sx={{ color: `${colors.text}` }}>
+//           {product.price} TL
+//         </Typography>
+//       </CardContent>
+//       {plan === 'premium' && (
+//         <Button
+//           variant="contained"
+//           sx={{
+//             m: 1,
+//             backgroundColor: colors.secondary,
+//             '&:hover': { backgroundColor: '#5A67D8' }
+//           }}
+//           onClick={() => onAddToCart(product)}
+//         >
+//           Sepete Ekle
+//         </Button>
+//       )}
+//     </Card>
+//   )
+// }
+
+const ProductItem = ({ product, onAddToCart, plan, styles }: { product: Product, onAddToCart: (product: Product) => void, plan?: string, styles: any }) => {
   return (
-    <Card sx={{ backgroundColor: `${colors.primary}` }}>
+    <Card sx={{ backgroundColor: styles.cardBackground }}>
       <CardMedia
         component="img"
         image={product.images?.[0] ? getStrapiMedia(product.images[0]) : 'https://via.placeholder.com/150'}
@@ -54,10 +90,17 @@ const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddTo
         sx={{ height: 140 }}
       />
       <CardContent>
-        <Typography gutterBottom variant="h6" component="div" sx={{ fontWeight: 'bold', color: `${colors.text}` }}>
+        <Typography gutterBottom variant="h6" component="div" sx={{
+          fontWeight: 'bold',
+          fontFamily: styles.productTitleFont,
+          color: styles.productTitleColor,
+        }}>
           {product.name}
         </Typography>
-        <Typography variant="body2" sx={{ color: `${colors.text}` }}>
+        <Typography variant="body2" sx={{
+          fontFamily: styles.productDescriptionFont,
+          color: styles.productDescriptionColor,
+        }}>
           {product.price} TL
         </Typography>
       </CardContent>
@@ -66,7 +109,7 @@ const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddTo
           variant="contained"
           sx={{
             m: 1,
-            backgroundColor: colors.secondary,
+            backgroundColor: styles.secondary,
             '&:hover': { backgroundColor: '#5A67D8' }
           }}
           onClick={() => onAddToCart(product)}
@@ -77,7 +120,6 @@ const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddTo
     </Card>
   )
 }
-
 
 // --- Ana Tema Bileşeni ---
 function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
@@ -135,6 +177,20 @@ function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
   // --- CAROUSEL OKLARI İÇİN EKLENENLER BİTİŞ ---
 
+  const finalStyles = {
+    restaurantTitleFont: restaurant.font_restaurant_title || playfair.style.fontFamily,
+    categoryTitleFont: restaurant.font_category_title || playfair.style.fontFamily,
+    productTitleFont: restaurant.font_product_title || inter.style.fontFamily,
+    productDescriptionFont: restaurant.font_product_title || inter.style.fontFamily, // `font_body` genel metin fontu olsun
+
+    restaurantTitleColor: restaurant.color_restaurant_title || colors.primary,
+    categoryTitleColor: restaurant.color_category_title || colors.text,
+    productTitleColor: restaurant.color_product_title || colors.text,
+    productDescriptionColor: restaurant.color_product_description || colors.text,
+
+    cardBackground: colors.primary // Ana kart rengi context'ten geliyor
+  };
+
   const displayedProducts = restaurant.categories?.find(c => c.id === selectedCategoryId)?.products || [];
   const selectedCategoryName = restaurant.categories?.find(c => c.id === selectedCategoryId)?.name || 'Tüm Ürünler';
 
@@ -143,8 +199,15 @@ function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
     <Box sx={{ bgcolor: colors.background, color: colors.text, minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       <header className="p-4 flex flex-col items-center gap-4">
         <Avatar src={restaurant.logo ? getStrapiMedia(restaurant.logo) : undefined} sx={{ width: 56, height: 56 }}>{restaurant.name.charAt(0)}</Avatar>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', textAlign: 'center' }}>{restaurant.name}</Typography>
-
+        {restaurant.show_restaurant_name && (
+          <Typography variant="h4" component="h1" sx={{ 
+                fontFamily: finalStyles.restaurantTitleFont, 
+                fontWeight: 'bold', 
+                color: finalStyles.restaurantTitleColor 
+            }}>
+              {restaurant.name}
+            </Typography>
+        )}
         {/* YENİ ARAMA ÇUBUĞU */}
         <Box sx={{ width: '100%', maxWidth: 500, px: 2 }}>
           <TextField
@@ -210,14 +273,19 @@ function ModernThemeContent({ restaurant }: { restaurant: Restaurant }) {
 
       {/* Ürünler Grid */}
       <Box sx={{ p: 2, mt: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
+        <Typography variant="h5" sx={{
+          fontWeight: 'bold',
+          mb: 3,
+          fontFamily: finalStyles.categoryTitleFont,
+          color: finalStyles.categoryTitleColor,
+        }}>
           {searchTerm.trim() ? 'Arama Sonuçları' : selectedCategoryName}
         </Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 2 }}>
           {/* Arama varsa filtrelenmişi, yoksa seçili kategoriyi göster */}
           {filteredCategories && (searchTerm.trim() ? filteredCategories?.flatMap(c => c.products || []) : displayedProducts)
             .map(product => (
-              <ProductItem key={product.id} product={product} onAddToCart={handleAddToCartClick} plan={restaurant.plan} />
+              <ProductItem key={product.id} product={product} onAddToCart={handleAddToCartClick} plan={restaurant.plan} styles={finalStyles} />
             ))}
         </Box>
       </Box>

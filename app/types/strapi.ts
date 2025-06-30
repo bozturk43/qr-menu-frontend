@@ -130,8 +130,13 @@ export interface Restaurant {
   primary_color_override: string,
   secondary_color_override: string,
   show_restaurant_name?: boolean,
-  font_title?: string,
-  font_body?:string,
+  font_restaurant_title?: string | null;
+  font_category_title?: string | null;
+  font_product_title?: string | null;
+  color_restaurant_title?: string | null;
+  color_category_title?: string | null;
+  color_product_title?: string | null;
+  color_product_description?: string | null;
 
 }
 export interface OrderItem {
@@ -221,14 +226,19 @@ export interface UpdateRestaurantData {
   name?: string;
   slug?: string;
   selected_theme?: number;
-  primary_color_override?: string | null; // Hex kodu
+  logo?: number | null;
+  show_restaurant_name?: boolean;
+  font_restaurant_title?: string | null;
+  font_category_title?: string | null;
+  font_product_title?: string | null;
+  color_restaurant_title?: string | null;
+  color_category_title?: string | null;
+  color_product_title?: string | null;
+  color_product_description?: string | null;
+  primary_color_override?: string | null;
   secondary_color_override?: string | null;
   background_color_override?: string | null;
   text_color_override?: string | null;
-  logo?: number | null; // Yeni logo ID'si
-  show_restaurant_name?: boolean;
-  font_title?: string;
-  font_body?:string;
 }
 
 //User CRUD Modeller

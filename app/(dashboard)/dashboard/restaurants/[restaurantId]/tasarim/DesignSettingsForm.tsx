@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { updateRestaurant } from '@/app/lib/api';
@@ -13,7 +13,8 @@ import { ChromePicker, ColorResult } from 'react-color';
 // MUI & İkonlar
 import {
     Box, Card, CardHeader, CardContent, TextField, Button, CardActions, Autocomplete,
-    Typography, Switch, FormControlLabel, Paper, Popover, Chip
+    Typography, Switch, FormControlLabel, Paper, Popover, Chip,
+    Tooltip
 } from '@mui/material';
 import { inter, playfair } from '@/app/theme'; // Ana temamızdaki fontları import ediyoruz
 import { useSnackbar } from '@/app/context/SnackBarContext';
@@ -57,16 +58,24 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
     const [reloadKey, setReloadKey] = useState(0);
 
 
-    const { control, handleSubmit, formState: { isDirty, dirtyFields } } = useForm<UpdateRestaurantData>({
+    const { control, handleSubmit, reset, formState: { isDirty, dirtyFields } } = useForm<UpdateRestaurantData>({
         // Formun varsayılan değerlerini sunucudan gelen veriyle dolduruyoruz
         defaultValues: {
             show_restaurant_name: restaurant.show_restaurant_name ?? true,
-            font_title: restaurant.font_title || playfair.style.fontFamily,
-            font_body: restaurant.font_body || inter.style.fontFamily,
+            font_restaurant_title: restaurant.font_restaurant_title || playfair.style.fontFamily,
+            font_category_title: restaurant.font_category_title || playfair.style.fontFamily,
+            font_product_title: restaurant.font_product_title || inter.style.fontFamily,
+
+            color_restaurant_title : restaurant.color_restaurant_title || null,
+            color_category_title: restaurant.color_category_title || null,
+            color_product_title: restaurant.color_product_title || null,
+            color_product_description: restaurant.color_product_description || null,
+
             primary_color_override: restaurant.primary_color_override || null,
             secondary_color_override: restaurant.secondary_color_override || null,
             background_color_override: restaurant.background_color_override || null,
             text_color_override: restaurant.text_color_override || null,
+
         }
     });
 
@@ -97,6 +106,27 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
         }
     };
 
+    const handleResetAllSettings = () => {
+        const defaultValues = {
+            show_restaurant_name: true,
+            font_restaurant_title: null,
+            font_category_title:null,
+            font_product_title:null,
+            color_restaurant_title:null,
+            color_category_title: null,
+            color_product_title: null,
+            color_product_description: null,
+            primary_color_override: null,
+            secondary_color_override: null,
+            background_color_override: null,
+            text_color_override: null,
+        };
+        // reset fonksiyonu formu tamamen başlangıç değerlerine döndürür
+        reset(defaultValues);
+        // Değişikliği kaydetmek için bir mutasyon tetikleyebiliriz
+        mutate(defaultValues);
+    };
+
     // Menünün tam URL'ini oluşturalım
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
     const menuUrl = `${siteUrl}/menu/${restaurant.slug}`;
@@ -112,6 +142,15 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
                         <CardHeader
                             title="Tasarım & Özelleştirme"
                             subheader="Menünüzün görünümünü marka kimliğinize göre özelleştirin."
+                            action={
+                                <Tooltip title="Tüm tasarım ayarlarını temanın varsayılan haline döndür.">
+                                    <span>
+                                        <Button variant="outlined" size="small" onClick={handleResetAllSettings} disabled={!isPremium}>
+                                            Tüm Ayarları Sıfırla
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                            }
                         />
                         <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 
@@ -130,7 +169,7 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
                                 <Typography variant="h6" gutterBottom>Yazı Tipleri</Typography>
                                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                                     <Controller
-                                        name="font_title"
+                                        name="font_restaurant_title"
                                         control={control}
                                         render={({ field }) => (
                                             <Autocomplete
@@ -139,7 +178,7 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
                                                 getOptionLabel={(option) => option.label}
                                                 value={fontOptions.find(f => f.value === field.value) || fontOptions[0]}
                                                 onChange={(e, newValue) => field.onChange(newValue?.value)}
-                                                renderInput={(params) => <TextField {...params} label="Ana Başlık Fontu" />}
+                                                renderInput={(params) => <TextField {...params} label="Restoran Başlık Fontu" />}
                                                 renderOption={(props, option) => (
                                                     <Box component="li" {...props} sx={{ fontFamily: option.value }}>
                                                         {option.label}
@@ -150,7 +189,7 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
                                         )}
                                     />
                                     <Controller
-                                        name="font_body"
+                                        name="font_category_title"
                                         control={control}
                                         render={({ field }) => (
                                             <Autocomplete
@@ -159,7 +198,27 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
                                                 getOptionLabel={(option) => option.label}
                                                 value={fontOptions.find(f => f.value === field.value) || fontOptions[1]}
                                                 onChange={(e, newValue) => field.onChange(newValue?.value)}
-                                                renderInput={(params) => <TextField {...params} label="Normal Metin Fontu" />}
+                                                renderInput={(params) => <TextField {...params} label="Kategori Başlıkları Fontu" />}
+                                                renderOption={(props, option) => (
+                                                    <Box component="li" {...props} sx={{ fontFamily: option.value }}>
+                                                        {option.label}
+                                                    </Box>
+                                                )}
+                                                sx={{ flex: 1 }}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        name="font_product_title"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Autocomplete
+                                                {...field}
+                                                options={fontOptions}
+                                                getOptionLabel={(option) => option.label}
+                                                value={fontOptions.find(f => f.value === field.value) || fontOptions[1]}
+                                                onChange={(e, newValue) => field.onChange(newValue?.value)}
+                                                renderInput={(params) => <TextField {...params} label="Ürün Başlıkları Fontu" />}
                                                 renderOption={(props, option) => (
                                                     <Box component="li" {...props} sx={{ fontFamily: option.value }}>
                                                         {option.label}
@@ -186,7 +245,7 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
                                             render={({ field }) => (
                                                 <Box>
                                                     <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 'medium', color: 'text.secondary' }}>
-                                                        Ana Renk
+                                                        Ürün Kartları Arkaplan Rengi
                                                     </Typography>
                                                     <ColorPickerInput {...field} />
                                                 </Box>
@@ -197,7 +256,7 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
                                             render={({ field }) => (
                                                 <Box>
                                                     <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 'medium', color: 'text.secondary' }}>
-                                                        Vurgu Rengi
+                                                        Kategori Kartları Arka Plan Rengi
                                                     </Typography>
                                                     <ColorPickerInput {...field} />
                                                 </Box>
@@ -221,6 +280,54 @@ export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
                                                 <Box>
                                                     <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 'medium', color: 'text.secondary' }}>
                                                         Metin Rengi
+                                                    </Typography>
+                                                    <ColorPickerInput {...field} />
+
+                                                </Box>
+                                            )
+                                            }
+                                        />
+                                        <Controller name="color_restaurant_title"
+                                            control={control} render={({ field }) => (
+                                                <Box>
+                                                    <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 'medium', color: 'text.secondary' }}>
+                                                        Restoran Başlık Rengi
+                                                    </Typography>
+                                                    <ColorPickerInput {...field} />
+
+                                                </Box>
+                                            )
+                                            }
+                                        />
+                                        <Controller name="color_category_title"
+                                            control={control} render={({ field }) => (
+                                                <Box>
+                                                    <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 'medium', color: 'text.secondary' }}>
+                                                        Kategori Başlıkları Rengi
+                                                    </Typography>
+                                                    <ColorPickerInput {...field} />
+
+                                                </Box>
+                                            )
+                                            }
+                                        />
+                                         <Controller name="color_product_title"
+                                            control={control} render={({ field }) => (
+                                                <Box>
+                                                    <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 'medium', color: 'text.secondary' }}>
+                                                        Ürün Başlıkları Rengi
+                                                    </Typography>
+                                                    <ColorPickerInput {...field} />
+
+                                                </Box>
+                                            )
+                                            }
+                                        />
+                                        <Controller name="color_product_description"
+                                            control={control} render={({ field }) => (
+                                                <Box>
+                                                    <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 'medium', color: 'text.secondary' }}>
+                                                        Ürün Açıklamaları Rengi
                                                     </Typography>
                                                     <ColorPickerInput {...field} />
 
