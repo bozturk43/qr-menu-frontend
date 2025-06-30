@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ThemeColorProvider, useThemeColors } from '@/app/context/ThemeColorContext';
 import type { Restaurant, Category, Product } from '@/app/types/strapi';
-import { Box, Typography, Avatar, Paper, Card, CardMedia, CardContent, IconButton, TextField, InputAdornment, Button } from '@mui/material';
+import { Box, Typography, Avatar, Card, CardMedia, CardContent, IconButton, TextField, InputAdornment, Button } from '@mui/material';
 import { ChevronLeft, ChevronRight, SearchIcon } from 'lucide-react';
 import { CartItem, useCartStore } from '../stores/cartStore';
 import ProductWithOptionsModal from '../components/menu/ProductWithOptionsModal';

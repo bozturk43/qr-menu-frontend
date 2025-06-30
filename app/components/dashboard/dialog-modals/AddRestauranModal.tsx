@@ -8,7 +8,7 @@ import Cookies from 'js-cookie';
 import { createRestaurant, uploadFile } from '@/app/lib/api';
 
 // MUI ve İkonlar
-import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box, Typography } from '@mui/material';
+import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box } from '@mui/material';
 import { ImagePlus } from 'lucide-react';
 import { NewRestaurantData, User } from '@/app/types/strapi';
 

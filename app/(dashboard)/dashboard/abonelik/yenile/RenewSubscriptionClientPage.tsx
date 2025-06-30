@@ -3,7 +3,7 @@
 
 import { useState } from 'react'; // useState import ediyoruz
 import type { Restaurant } from '@/app/types/strapi';
-import { Box, Typography, Paper, Button, List, ListItem, ListItemText, Divider, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel } from '@mui/material';
+import { Box, Typography, Paper, Button, List, ListItem, Divider, Radio, RadioGroup, FormControlLabel, FormControl } from '@mui/material';
 import { WarningAmber as WarningIcon, CreditCard } from '@mui/icons-material';
 
 interface ClientPageProps {

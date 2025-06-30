@@ -1,7 +1,6 @@
 'use client';
 
-import { Box, Paper } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Paper } from '@mui/material';
 
 interface PreviewProps {
   // Gösterilecek olan menünün tam URL'i

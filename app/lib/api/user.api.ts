@@ -1,8 +1,6 @@
 // src/lib/api/user.api.ts
 
-import { cookies } from 'next/headers';
 import type { User, Restaurant, UpdateProfileData, ChangePasswordData } from '@/app/types/strapi';
-import qs from 'qs';
 
 // Strapi'den dönen user objesi, restoranları da içerecek şekilde genişletildi.
 interface UserWithRestaurants extends User {

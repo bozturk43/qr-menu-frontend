@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, Container, TextField, InputAdornment, Accordion, AccordionSummary, AccordionDetails, Paper, Card, CardHeader, CardContent, Button, CardActions } from '@mui/material';
+import { Box, Typography, Container, TextField, InputAdornment, Accordion, AccordionSummary, AccordionDetails, Card, CardHeader, CardContent, Button, CardActions } from '@mui/material';
 import { Search as SearchIcon, ExpandMore as ExpandMoreIcon, Mail as MailIcon, HelpCenter } from '@mui/icons-material';
 
 // Örnek SSS verisi aynı kalabilir

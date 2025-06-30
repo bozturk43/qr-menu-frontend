@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
-import { Home, User, DollarSign, HelpCircle } from 'lucide-react';
+import { Home, User, HelpCircle } from 'lucide-react';
 
 // Menü artık global linkleri içeriyor
 const menuItems = [

@@ -1,14 +1,13 @@
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
-import { Box, Typography, Card, CardHeader, CardContent, TextField, Button, CardActions, Alert } from '@mui/material';
+import { Box, Typography, Card, CardHeader, CardContent, TextField, Button, CardActions } from '@mui/material';
 import type { User, UpdateProfileData, ChangePasswordData } from '@/app/types/strapi';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { changePassword, updateUserProfile } from '@/app/lib/api';
 import { useRouter } from 'next/navigation'; // useRouter'ı import ediyoruz
 import { useSnackbar } from '@/app/context/SnackBarContext';
-import { error } from 'console';
 
 
 
@@ -19,7 +18,6 @@ interface ClientPageProps {
 
 
 export default function AccountSettingsClientPage({ user }: ClientPageProps) {
-  const queryClient = useQueryClient();
   const router = useRouter(); // Router'ı kullanıma hazırlıyoruz
   const { showSnackbar } = useSnackbar();
 
@@ -28,7 +26,7 @@ export default function AccountSettingsClientPage({ user }: ClientPageProps) {
   const { control: profileControl, handleSubmit: handleProfileSubmit, reset: resetProfileForm, formState: { errors: profileErrors, isDirty } } = useForm<UpdateProfileData>({
     defaultValues: { username: user?.username || '', email: user?.email || '' }
   });
-  const { mutate: updateProfileMutate, isPending: isProfilePending, isSuccess: isProfileSuccess, error: profileError } = useMutation({
+  const { mutate: updateProfileMutate, isPending: isProfilePending } = useMutation({
     mutationFn: (data: UpdateProfileData) => updateUserProfile(user.id, data, Cookies.get('jwt')!),
     onSuccess: () => {
       router.refresh();
@@ -45,7 +43,7 @@ export default function AccountSettingsClientPage({ user }: ClientPageProps) {
   const { control: passwordControl, handleSubmit: handlePasswordSubmit, formState: { errors: passwordErrors }, getValues, reset: resetPasswordForm } = useForm<ChangePasswordData>({
     defaultValues: { currentPassword: '', password: '', passwordConfirmation: '' }
   });
-  const { mutate: changePasswordMutate, isPending: isPasswordPending, isSuccess: isPasswordSuccess, error: passwordError } = useMutation({
+  const { mutate: changePasswordMutate, isPending: isPasswordPending } = useMutation({
     mutationFn: (data: ChangePasswordData) => changePassword(data, Cookies.get('jwt')!),
     onSuccess: () => {
       resetPasswordForm(); // Formu temizle

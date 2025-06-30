@@ -7,7 +7,7 @@ import { useCartStore } from '@/app/stores/cartStore';
 import { Box, Drawer, Typography, List, ListItem, ListItemText, IconButton, Button, Divider } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { Plus, Minus, X } from 'lucide-react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 
 interface CartDrawerProps {
@@ -18,9 +18,7 @@ interface CartDrawerProps {
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
     // Zustand store'undan sepetin içeriğini ve fonksiyonları alıyoruz
     const { items, removeFromCart, updateQuantity, clearCart } = useCartStore();
-    const params = useParams(); // useParams, path'i alır
     const searchParams = useSearchParams(); // useSearchParams, query'yi alır
-    const restaurantSlug = params.slug as string; // -> 'abc_restoran'
     const tableIdentifier = searchParams.get('table'); // -> 'masa-1'
     const { showSnackbar } = useSnackbar();
 

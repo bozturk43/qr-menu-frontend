@@ -1,7 +1,7 @@
 // src/components/dashboard/AddItemToOrderModal.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { addItemsToOrder } from '@/app/lib/api';

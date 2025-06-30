@@ -85,7 +85,7 @@ export default function SingleRestaurantPage() {
           Detaylı İstatistikler
         </Typography>
         <Paper variant="outlined" sx={{ p: 8, textAlign: 'center', color: 'text.secondary' }}>
-          {restaurant.plan === 'premium'
+          {restaurant.plan === 'pro' || restaurant.plan === 'bussiness'
             ? 'Premium İstatistik Grafikleri Yakında Burada!'
             : 'Detaylı istatistikler için Premium Plana geçin.'
           }

@@ -51,7 +51,7 @@ export default function DiscountModal({ open, onClose, orderId, restaurantId }: 
             render={({ field }) => (
               <ToggleButtonGroup {...field} exclusive fullWidth sx={{ mb: 2 }}>
                 <ToggleButton value="percentage"><Percent size={18} /> Yüzde</ToggleButton>
-                <ToggleButton value="fixed_amount">"TL" Sabit Tutar</ToggleButton>
+                <ToggleButton value="fixed_amount">TL Sabit Tutar</ToggleButton>
               </ToggleButtonGroup>
             )}
           />

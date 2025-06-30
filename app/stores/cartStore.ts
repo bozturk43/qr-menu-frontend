@@ -1,6 +1,6 @@
 // src/stores/cartStore.ts
 import { create } from 'zustand';
-import type { Product, VariationGroup, Option } from '@/app/types/strapi';
+import type { Product, Option } from '@/app/types/strapi';
 
 // Sepetteki tek bir ürünün nasıl görüneceğini tanımlayan tip
 export interface CartItem {

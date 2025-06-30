@@ -185,7 +185,7 @@ export default function CategoriesPage() {
                         Henüz hiç kategori oluşturmadınız.
                     </Typography>
                     <Typography color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                        Başlamak için "Yeni Kategori Ekle" butonuna tıklayın.
+                        Başlamak için Yeni Kategori Ekle butonuna tıklayın.
                     </Typography>
                     <Button
                         variant="contained"
@@ -218,7 +218,7 @@ export default function CategoriesPage() {
                 <DialogTitle>Kategoriyi Silmeyi Onayla</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Emin misiniz? **"{categoryToDelete?.name}"** adlı kategori kalıcı olarak silinecektir. Bu işlem geri alınamaz.
+                        Emin misiniz? {categoryToDelete?.name} adlı kategori kalıcı olarak silinecektir. Bu işlem geri alınamaz.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

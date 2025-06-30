@@ -1,6 +1,5 @@
 'use client';
 
-import { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { Restaurant } from '@/app/types/strapi';
 import { Box, Button, Typography, Paper } from '@mui/material'; // Grid importunu kaldırdık

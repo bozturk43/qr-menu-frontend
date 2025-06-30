@@ -7,8 +7,7 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { getThemes, updateRestaurant, uploadFile } from '@/app/lib/api';
 import type { Restaurant, UpdateRestaurantData } from '@/app/types/strapi';
-import { Box, Card, CardHeader, CardContent, TextField, Button, CardActions, Select, MenuItem, FormControl, InputLabel, Typography, Chip, Popover, Tooltip, Avatar } from '@mui/material';
-import { ChromePicker, ColorResult } from 'react-color';
+import { Box, Card, CardHeader, CardContent, TextField, Button, CardActions, Select, MenuItem, FormControl, InputLabel, Typography, Avatar } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { useSnackbar } from '@/app/context/SnackBarContext';
@@ -17,34 +16,6 @@ interface SettingsFormProps {
   restaurant: Restaurant;
 }
 
-function ColorPickerInput({ value, onChange }: { value: string | null | undefined, onChange: (color: string) => void }) {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  // Görüntülenecek rengi belirliyoruz. Eğer bir değer yoksa, beyaz göster.
-  const displayColor = value || '#FFFFFF';
-
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
-  const open = Boolean(anchorEl);
-
-  return (
-    <>
-      <Button variant="outlined" onClick={handleClick} sx={{ textTransform: 'none', justifyContent: 'flex-start' }}>
-        <Box sx={{ width: 24, height: 24, backgroundColor: displayColor, border: '1px solid grey', mr: 1, borderRadius: '4px' }} />
-        {/* Değer varsa onu, yoksa "Renk Seç" yazısını göster */}
-        {value ? value.toUpperCase() : "Renk Seç"}
-      </Button>
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-      >
-        <ChromePicker color={displayColor} onChangeComplete={(color: ColorResult) => onChange(color.hex)} />
-      </Popover>
-    </>
-  )
-}
 
 export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps) {
   const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
@@ -62,7 +33,7 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
       text_color_override: restaurant?.text_color_override || '',
     }
   });
-  const { data: themeData, isLoading: themeLoading, isError: themeError } = useQuery({
+  const { data: themeData} = useQuery({
     queryKey: ["themes"],
     queryFn: getThemes
   })
@@ -104,15 +75,6 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
     }
 
   };
-  const handleResetColors = () => {
-    // setValue ile dört renk alanını da null'a çeviriyoruz.
-    // { shouldDirty: true } ayarı, bu değişikliğin bir "form değişikliği"
-    // olarak algılanmasını ve "Kaydet" butonunun aktif olmasını sağlar.
-    setValue('primary_color_override', null, { shouldDirty: true });
-    setValue('secondary_color_override', null, { shouldDirty: true });
-    setValue('background_color_override', null, { shouldDirty: true });
-    setValue('text_color_override', null, { shouldDirty: true });
-  };
   // Yeni dosya seçildiğinde state'i ve önizlemeyi güncelleyen fonksiyon
   const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -136,7 +98,6 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
       setLogoPreview(restaurant.logo ? `${STRAPI_URL}${restaurant.logo.url}` : null);
     }
   }, [restaurant]);
-  const isPremium = restaurant.plan === 'pro' || restaurant.plan === 'bussiness';
 
 
   return (
@@ -154,7 +115,7 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
                 <InputLabel>Menü Teması</InputLabel>
                 <Select {...field} label="Menü Teması">
                   {themeData?.map(item => (
-                    <MenuItem value={item.id}>{item.name}</MenuItem>
+                    <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
                   ))}
                 </Select>
               </FormControl>

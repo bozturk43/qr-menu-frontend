@@ -1,12 +1,11 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Box, Typography, Button, Card, CardActionArea, CardContent, Chip, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Tooltip, IconButton, Avatar } from '@mui/material'; // Chip'i import ediyoruz
 import { Add, StarBorder as UpgradeIcon } from '@mui/icons-material';
 import { Restaurant, User } from '@/app/types/strapi';
 import AddRestaurantModal from '@/app/components/dashboard/dialog-modals/AddRestauranModal';
-import { useRouter } from 'next/navigation';
 
 interface DashboardClientPageProps {
     restaurants: Restaurant[];
@@ -16,7 +15,6 @@ interface DashboardClientPageProps {
 export default function DashboardClientPage({ restaurants, user }: DashboardClientPageProps) {
     const [isAddModalOpen, setAddModalOpen] = useState(false);
     const [isUpgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
-    const router = useRouter();
 
     const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
@@ -148,7 +146,7 @@ export default function DashboardClientPage({ restaurants, user }: DashboardClie
                 <DialogActions>
                     <Button onClick={() => setUpgradeDialogOpen(false)}>İptal</Button>
                     <Button onClick={handleProceedToPayment} variant="contained">
-                        Premium'a Geç
+                        Premium Ol
                     </Button>
                 </DialogActions>
             </Dialog>

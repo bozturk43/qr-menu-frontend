@@ -2,7 +2,6 @@
 
 import { getLandingPageData } from '@/app/lib/api';
 import { Box, Button, Container, Typography, Paper, Card, CardContent, Avatar } from '@mui/material';
-import { CheckCircle } from 'lucide-react';
 import Image from 'next/image'; // Next.js'in optimize edilmiş resim bileşeni
 import FeatureGrid from '../components/marketing/FeatureGrid';
 import PricingSection from '../components/marketing/PricingSection';

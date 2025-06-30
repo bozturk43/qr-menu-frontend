@@ -1,9 +1,9 @@
 // app/(dashboard)/restaurants/[restaurantId]/tasarim/DesignSettingsForm.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { updateRestaurant } from '@/app/lib/api';
@@ -13,7 +13,7 @@ import { ChromePicker, ColorResult } from 'react-color';
 // MUI & İkonlar
 import {
     Box, Card, CardHeader, CardContent, TextField, Button, CardActions, Autocomplete,
-    Typography, FormControl, InputLabel, Switch, FormControlLabel, Paper, Popover, Tooltip, Chip
+    Typography, Switch, FormControlLabel, Paper, Popover, Chip
 } from '@mui/material';
 import { inter, playfair } from '@/app/theme'; // Ana temamızdaki fontları import ediyoruz
 import { useSnackbar } from '@/app/context/SnackBarContext';
@@ -53,7 +53,6 @@ const fontOptions = [
 
 export default function DesignSettingsForm({ restaurant }: DesignFormProps) {
     const router = useRouter();
-    const queryClient = useQueryClient();
     const { showSnackbar } = useSnackbar();
     const [reloadKey, setReloadKey] = useState(0);
 

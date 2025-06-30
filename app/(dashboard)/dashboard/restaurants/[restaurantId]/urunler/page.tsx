@@ -18,7 +18,7 @@ import {
     IconButton
 } from '@mui/material';
 import { Add, Delete, Edit, ExpandMore as ExpandMoreIcon, ArrowUpward, ArrowDownward } from '@mui/icons-material'; // Açılır-kapanır ikonu için
-import { Category, Product, Restaurant } from '@/app/types/strapi';
+import { Category, Product } from '@/app/types/strapi';
 import AddProductModal from '@/app/components/dashboard/dialog-modals/AddProductModal';
 import EditProductModal from '@/app/components/dashboard/dialog-modals/EditProductModal';
 import { useSnackbar } from '@/app/context/SnackBarContext';
@@ -225,7 +225,7 @@ export default function ProductsPage() {
                 <DialogTitle>Ürünü Silmeyi Onayla</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Emin misiniz? **"{productToDelete?.name}"** adlı ürün kalıcı olarak silinecektir.
+                        Emin misiniz? {productToDelete?.name} adlı ürün kalıcı olarak silinecektir.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

@@ -3,7 +3,6 @@
 
 import { useForm, Controller } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { createTable } from '@/app/lib/api';
 import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert } from '@mui/material';
@@ -16,7 +15,6 @@ interface AddTableModalProps {
 }
 
 export default function AddTableModal({ open, onClose, restaurantId }: AddTableModalProps) {
-    const router = useRouter();
     const queryClient = useQueryClient();
     const { control, handleSubmit, reset, formState: { errors } } = useForm<Omit<NewTableData, 'restaurant'>>({
         defaultValues: { name: '' },

@@ -121,7 +121,7 @@ export default function TablesPage() {
             href={`/print/${restaurantId}`}
             startIcon={<QrCodeScanner />}
           >
-            Tüm QR'ları Yazdır
+            Tüm QR ları Yazdır
           </Button>
         </ButtonGroup>
       </Box>
@@ -170,7 +170,7 @@ export default function TablesPage() {
         <DialogTitle>Masayı Silmeyi Onayla</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Emin misiniz? **"{tableToDelete?.name}"** adlı masa kalıcı olarak silinecektir.
+            Emin misiniz? {tableToDelete?.name} adlı masa kalıcı olarak silinecektir.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

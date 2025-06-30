@@ -7,7 +7,7 @@ import Cookies from 'js-cookie';
 import { createCategory, uploadFile } from '@/app/lib/api';
 
 // MUI & İkonlar
-import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Alert, Box } from '@mui/material';
+import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box } from '@mui/material';
 import { NewCategoryData } from '@/app/types/strapi';
 import { useEffect, useState } from 'react';
 

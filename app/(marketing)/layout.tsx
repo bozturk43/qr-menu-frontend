@@ -2,7 +2,7 @@
 
 import MarketingHeader from "@/app/components/marketing/MarketingHeader";
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
-import { Box, Toolbar } from "@mui/material";
+import { Box } from "@mui/material";
 
 export default function MarketingLayout({
     children,

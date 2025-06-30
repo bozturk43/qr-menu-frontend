@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react';
 import { ThemeColorProvider, useThemeColors } from '@/app/context/ThemeColorContext';
 import type { Restaurant, Category } from '@/app/types/strapi';
-import { Box, Typography, Avatar, Paper, List, ListItem, ListItemButton, ListItemText, Divider, IconButton, Card, CardMedia, CardContent, CardActionArea, TextField, InputAdornment } from '@mui/material';
-import { ChevronRight, ArrowBack } from '@mui/icons-material';
+import { Box, Typography, Avatar,IconButton, Card, CardMedia, CardContent, CardActionArea, TextField, InputAdornment } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 import { SearchIcon } from 'lucide-react';
 
 // --- Ana Tema İçeriği Bileşeni ---

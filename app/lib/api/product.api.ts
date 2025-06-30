@@ -1,7 +1,6 @@
 // src/lib/api/product.api.ts
 
 import type { NewProductData, Product, UpdateProductData } from "@/app/types/strapi";
-import { uploadFile } from './category.api'; // Resim yükleme fonksiyonunu yeniden kullanacağız
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 

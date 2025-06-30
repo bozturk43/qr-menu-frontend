@@ -7,7 +7,7 @@ import Cookies from 'js-cookie';
 import { updateCategory, uploadFile } from '@/app/lib/api';
 import type { Category, UpdateCategoryData } from '@/app/types/strapi';
 
-import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Alert, Box } from '@mui/material';
+import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box } from '@mui/material';
 
 interface EditCategoryModalProps {
   open: boolean;

@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getAuthenticatedUser, getMe, getRestaurantsByOwner } from '@/app/lib/api';
+import { getAuthenticatedUser, getRestaurantsByOwner } from '@/app/lib/api';
 import Header from '@/app/components/dashboard/Header';
 import Sidebar from '@/app/components/dashboard/Sidebar';
 import { Box, Toolbar } from '@mui/material'; // Box ve Toolbar'ı import ediyoruz

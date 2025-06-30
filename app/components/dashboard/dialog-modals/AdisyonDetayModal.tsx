@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Order, Restaurant } from '@/app/types/strapi';
 import { closeOrder, deleteOrderItem, payOrderItems } from '@/app/lib/api';
 import Cookies from 'js-cookie';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, List, ListItem, ListItemText, Box, Divider, IconButton, Tooltip, Checkbox, DialogContentText } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, List, ListItem, ListItemText, Box, IconButton, Tooltip, Checkbox, DialogContentText } from '@mui/material';
 import { Delete, Close, Add, Discount } from '@mui/icons-material';
 import { useSnackbar } from '@/app/context/SnackBarContext';
 import { useState } from 'react';

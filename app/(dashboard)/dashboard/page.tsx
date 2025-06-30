@@ -1,10 +1,7 @@
 // app/(dashboard)/dashboard/page.tsx
 
-import { Box, Typography, Button, Card, CardActionArea, CardContent } from '@mui/material';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { Add } from '@mui/icons-material';
 import { getAuthenticatedUser, getRestaurantsByOwner } from '@/app/lib/api';
 import DashboardClientPage from './DashboardClientPage';
 

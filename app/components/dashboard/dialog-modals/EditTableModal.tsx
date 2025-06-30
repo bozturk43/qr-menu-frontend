@@ -3,11 +3,10 @@
 
 import { useForm, Controller } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { createTable, updateTable } from '@/app/lib/api';
+import { updateTable } from '@/app/lib/api';
 import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert } from '@mui/material';
-import { NewTableData, Table, UpdateTableData } from '@/app/types/strapi';
+import { Table, UpdateTableData } from '@/app/types/strapi';
 
 interface AddTableModalProps {
     open: boolean;
@@ -17,7 +16,6 @@ interface AddTableModalProps {
 }
 
 export default function EditTableModal({ open, onClose, tableToEdit,restaurantId }: AddTableModalProps) {
-    const router = useRouter();
     const queryClient = useQueryClient();
     const { control, handleSubmit, reset, formState: { errors } } = useForm<Omit<UpdateTableData, 'restaurant'>>({
         defaultValues: { name: tableToEdit.name },
