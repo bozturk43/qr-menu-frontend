@@ -16,6 +16,7 @@ import {
     Paper
 } from '@mui/material';
 import { X as XIcon, ImagePlus, Trash2, PlusCircle } from 'lucide-react';
+import { getStrapiMedia } from '@/app/lib/utils';
 
 // Bileşenin alacağı propların tipi
 interface EditProductModalProps {
@@ -158,7 +159,7 @@ export default function EditProductModal({ open, onClose, product, categories, i
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 2, minHeight: '118px' }}>
                         {existingImages.map(image => (
                             <Box key={image.id} sx={{ position: 'relative' }}>
-                                <img src={`${STRAPI_URL}${image.url}`} alt={image.name} style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                                <img src={getStrapiMedia(image)} alt={image.name} style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
                                 <IconButton size="small" sx={{ position: 'absolute', top: -5, right: -5, backgroundColor: 'white', '&:hover': { backgroundColor: '#eee' } }} onClick={() => setExistingImages(prev => prev.filter(img => img.id !== image.id))}>
                                     <XIcon size={16} color="red" />
                                 </IconButton>

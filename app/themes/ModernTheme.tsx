@@ -10,6 +10,7 @@ import { CartItem, useCartStore } from '../stores/cartStore';
 import ProductWithOptionsModal from '../components/menu/ProductWithOptionsModal';
 import CartFab from '../components/menu/CartFab';
 import CartDrawer from '../components/menu/CartDrawer';
+import { getStrapiMedia } from '../lib/utils';
 
 // --- Alt Bileşenler ---
 
@@ -31,7 +32,7 @@ const CategorySlide = ({ category, isSelected, onClick }: { category: Category, 
       }}>
         <CardMedia
           component="img"
-          image={category.image ? `${STRAPI_URL}${category.image.url}` : 'https://via.placeholder.com/150'}
+          image={category.image ? getStrapiMedia(category.image) : 'https://via.placeholder.com/150'}
           alt={category.name}
           sx={{ height: 80, objectFit: 'cover' }}
         />
@@ -51,7 +52,7 @@ const ProductItem = ({ product, onAddToCart, plan }: { product: Product, onAddTo
     <Card sx={{ backgroundColor: `${colors.primary}` }}>
       <CardMedia
         component="img"
-        image={product.images?.[0] ? `${STRAPI_URL}${product.images[0].url}` : 'https://via.placeholder.com/150'}
+        image={product.images?.[0] ? getStrapiMedia(product.images[0]) : 'https://via.placeholder.com/150'}
         alt={product.name}
         sx={{ height: 140 }}
       />

@@ -6,6 +6,7 @@ import type { Restaurant, Category } from '@/app/types/strapi';
 import { Box, Typography, Avatar,IconButton, Card, CardMedia, CardContent, CardActionArea, TextField, InputAdornment } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { SearchIcon } from 'lucide-react';
+import { getStrapiMedia } from '../lib/utils';
 
 // --- Ana Tema İçeriği Bileşeni ---
 function ClassicThemeContent({ restaurant }: { restaurant: Restaurant }) {
@@ -85,7 +86,7 @@ function ClassicThemeContent({ restaurant }: { restaurant: Restaurant }) {
                       <Card key={product.id} sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
                         <CardMedia
                           component="img"
-                          image={product.images?.[0] ? `${STRAPI_URL}${product.images[0].url}` : 'https://via.placeholder.com/150'}
+                          image={product.images?.[0] ? getStrapiMedia(product.images[0]) : 'https://via.placeholder.com/150'}
                           alt={product.name}
                           sx={{ height: 150, borderRadius: 2 }}
                         />
@@ -128,7 +129,7 @@ function ClassicThemeContent({ restaurant }: { restaurant: Restaurant }) {
                       <CardActionArea onClick={() => handleCategoryClick(category)}>
                         <CardMedia
                           component="img"
-                          image={category.image ? `${STRAPI_URL}${category.image.url}` : 'https://via.placeholder.com/250x150'}
+                          image={category.image ? getStrapiMedia(category.image) : 'https://via.placeholder.com/250x150'}
                           alt={category.name}
                           sx={{ height: 150 }}
                         />
@@ -158,7 +159,7 @@ function ClassicThemeContent({ restaurant }: { restaurant: Restaurant }) {
                     <Card key={product.id} sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
                       <CardMedia
                         component="img"
-                        image={product.images?.[0] ? `${STRAPI_URL}${product.images[0].url}` : 'https://via.placeholder.com/150'}
+                        image={product.images?.[0] ? getStrapiMedia(product.images[0]) : 'https://via.placeholder.com/150'}
                         alt={product.name}
                         sx={{ height: 150, borderRadius: 2 }}
                       />

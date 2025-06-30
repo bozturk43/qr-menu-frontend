@@ -5,6 +5,7 @@ import { Box, Button, Container, Typography, Paper, Card, CardContent, Avatar } 
 import Image from 'next/image'; // Next.js'in optimize edilmiş resim bileşeni
 import FeatureGrid from '../components/marketing/FeatureGrid';
 import PricingSection from '../components/marketing/PricingSection';
+import { getStrapiMedia } from '../lib/utils';
 
 export default async function LandingPage() {
   const data = await getLandingPageData();
@@ -66,7 +67,7 @@ export default async function LandingPage() {
             {hero_image && (
               <Paper elevation={12} sx={{ borderRadius: '16px', overflow: 'hidden' }}>
                 <Image
-                  src={`${STRAPI_URL}${hero_image.url}`}
+                  src={getStrapiMedia(hero_image)}
                   alt="QR Menü Uygulaması Ekran Görüntüsü"
                   width={hero_image.width}
                   height={hero_image.height}
@@ -101,7 +102,7 @@ export default async function LandingPage() {
                 <CardContent>
                   {feature.icon && (
                     <Avatar sx={{ mx: 'auto', mb: 2, width: 60, height: 60, bgcolor: 'secondary.main' }}>
-                      <Image src={`${STRAPI_URL}${feature.icon.url}`} alt={feature.title} width={32} height={32} />
+                      <Image src={getStrapiMedia(feature.icon)} alt={feature.title} width={32} height={32} />
                     </Avatar>
                   )}
                   <Typography variant="h5" component="h3" sx={{ fontWeight: 'bold', mb: 1 }}>

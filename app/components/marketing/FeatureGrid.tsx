@@ -1,6 +1,7 @@
 // src/components/marketing/FeatureGrid.tsx
 'use client';
 
+import { getStrapiMedia } from '@/app/lib/utils';
 import { Box, Typography, Paper } from '@mui/material';
 import Image from 'next/image';
 
@@ -52,7 +53,7 @@ export default function FeatureGrid({ blocks }: FeatureGridProps) {
                             {['.mp4', '.webm'].includes(block.image.ext) ? (
                                 // EĞER VİDEO İSE:
                                 <video
-                                    src={`${STRAPI_URL}${block.image.url}`}
+                                    src={getStrapiMedia(block.image)}
                                     width="100%"
                                     height="auto"
                                     autoPlay // Otomatik başlat
@@ -63,7 +64,7 @@ export default function FeatureGrid({ blocks }: FeatureGridProps) {
                             ) : (
                                 // EĞER RESİM İSE:
                                 <Image
-                                    src={`${STRAPI_URL}${block.image.url}`}
+                                    src={getStrapiMedia(block.image)}
                                     alt={block.title}
                                     width={block.image.width}
                                     height={block.image.height}
