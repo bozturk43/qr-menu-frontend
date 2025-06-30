@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { updateRestaurant } from '@/app/lib/api';
