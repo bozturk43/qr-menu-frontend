@@ -88,9 +88,9 @@ export default function EditProductModal({ open, onClose, product, categories, i
 
             // 2. Mevcut (silinmemiş) resimlerin ID'lerini al
             const existingImageIds = currentExistingImages.map(img => img.id);
-
+            const uploadedImageIds = newImageIds[0].map(item=>item.id)
             // 3. Nihai listeyi oluştur
-            const finalImageIds = [...existingImageIds, ...newImageIds];
+            const finalImageIds = [...existingImageIds, ...uploadedImageIds];
 
             const updateData: UpdateProductData = {
                 name: formData.name,

@@ -56,7 +56,8 @@ export default function AddRestaurantModal({ open, onClose,user }: AddRestaurant
 
             // 1. Eğer logo seçilmişse, önce onu yükle
             if (formData.logo && formData.logo.length > 0) {
-                logoId = await uploadFile(formData.logo[0], token);
+                const logoMedia = await uploadFile(formData.logo[0], token);
+                logoId = logoMedia[0].id;
             }
 
             // 2. Restoran verisini hazırla (slug YOK, Strapi halledecek)

@@ -41,11 +41,13 @@ export default function AddCategoryModal({ open, onClose, restaurantId, currentC
             const token = Cookies.get('jwt');
             if (!token) throw new Error('Not authenticated');
 
-            let imageId: number | undefined = undefined;
+            let image: number | undefined = undefined;
 
             // 1. Eğer resim seçilmişse, önce onu yükle
             if (formData.image && formData.image.length > 0) {
-                imageId = await uploadFile(formData.image[0], token);
+                const imageList = await uploadFile(formData.image[0], token);
+                image = imageList[0].id;
+
             }
 
             // 2. Kategori verisini hazırla
@@ -53,7 +55,7 @@ export default function AddCategoryModal({ open, onClose, restaurantId, currentC
                 name: formData.name,
                 restaurant: +restaurantId,
                 display_order: currentCategoryCount,
-                image: imageId,
+                image: image,
             };
 
             // 3. Kategoriyi oluştur

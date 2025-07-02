@@ -58,7 +58,8 @@ export default function EditCategoryModal({ open, category, onClose, restaurantI
 
       // 1. Eğer YENİ bir resim seçilmişse, onu yükle ve ID'sini al
       if (formData.image && formData.image.length > 0) {
-        imageId = await uploadFile(formData.image[0], token);
+        const imageArray = await uploadFile(formData.image[0], token);
+        imageId = imageArray[0].id;
       }
 
       // 2. Güncellenecek veriyi hazırla

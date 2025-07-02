@@ -1,5 +1,5 @@
 // src/lib/api/category.api.ts
-import type { Category, NewCategoryData, UpdateCategoryData } from "@/app/types/strapi";
+import type { Category, NewCategoryData, StrapiMedia, UpdateCategoryData } from "@/app/types/strapi";
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
@@ -61,10 +61,10 @@ export async function updateCategoryOrder(
  * Strapi'ye bir dosya yükler ve ID'sini döndürür.
  * @param file - Yüklenecek dosya
  * @param jwt - Yetkilendirme token'ı
- * @returns {Promise<number>} - Yüklenen medyanın ID'si
+ * @returns {Promise<StrapiMedia[]>} - Yüklenen medya objelerinin dizisi
  */
-export async function uploadFile(file: File, jwt: string): Promise<number> {
-    const uploadUrl = `${STRAPI_URL}/api/upload`;
+export async function uploadFile(file: File, jwt: string): Promise<StrapiMedia[]> {
+    const uploadUrl = `${STRAPI_URL}/api/user-assets/upload`;
     // Dosyayı göndermek için FormData kullanıyoruz
     const formData = new FormData();
     formData.append('files', file);
@@ -84,7 +84,7 @@ export async function uploadFile(file: File, jwt: string): Promise<number> {
         }
 
         // Strapi yüklenen dosyaları bir dizi içinde döndürür, ilk elemanın ID'sini alıyoruz.
-        return data[0].id;
+        return data;
 
     } catch (error) {
         console.error("Error in uploadFile:", error);

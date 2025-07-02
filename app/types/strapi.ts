@@ -3,14 +3,42 @@
 // =================================================================
 // 1. STRAPI'NİN GENEL YARDIMCI TİPLERİ
 // =================================================================
+export interface StrapiMediaFormat {
+  name: string;
+  hash: string;
+  ext: string;
+  mime: string;
+  path: string | null;
+  width: number;
+  height: number;
+  size: number;
+  sizeInBytes: number;
+  url: string;
+}
 
 export interface StrapiMedia {
   id: number;
   name: string;
-  url: string;
+  alternativeText: string | null; // <-- BU SATIRI EKLİYORUZ
+  caption: string | null;
   width: number;
   height: number;
-  formats?: { [key: string]: { url: string } };
+  formats: {
+    thumbnail: StrapiMediaFormat;
+    small?: StrapiMediaFormat;
+    medium?: StrapiMediaFormat;
+    large?: StrapiMediaFormat;
+  };
+  hash: string;
+  ext: string;
+  mime: string;
+  size: number;
+  url: string;
+  previewUrl: string | null;
+  provider: string;
+  provider_metadata: any;
+  createdAt: string;
+  updatedAt: string;
 }
 /** Strapi'nin herhangi bir koleksiyon öğesi için kullandığı sarmalayıcı */
 export type StrapiCollection<T> = T & {

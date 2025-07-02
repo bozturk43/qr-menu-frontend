@@ -56,7 +56,8 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
             // Eğer resimler seçilmişse, hepsini yükle ve ID'lerini topla
             if (formData.images && formData.images.length > 0) {
                 const uploadPromises = Array.from(formData.images).map(file => uploadFile(file, token));
-                imageIds = await Promise.all(uploadPromises);
+                const imageList = await Promise.all(uploadPromises);
+                imageIds = imageList[0].map(item=>item.id)
             }
 
             const variationsForApi = formData.variations.map(variation => {
