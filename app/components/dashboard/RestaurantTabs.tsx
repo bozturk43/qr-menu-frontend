@@ -19,13 +19,13 @@ export default function RestaurantTabs() {
     });
 
     const allTabs = [
-        { name: "Genel Bakış", href: `/dashboard/restaurants/${restaurantId}`, requiredPlans: ['free', 'pro', 'business'] },
-        { name: "Kategoriler", href: `/dashboard/restaurants/${restaurantId}/kategoriler`, requiredPlans: ['free', 'pro', 'business'] },
-        { name: "Ürünler", href: `/dashboard/restaurants/${restaurantId}/urunler`, requiredPlans: ['free', 'pro', 'business'] },
-        { name: "Tasarım & Özelleştirme", href: `/dashboard/restaurants/${restaurantId}/tasarim`, requiredPlans: ['pro', 'business'] },
-        { name: "Masalar", href: `/dashboard/restaurants/${restaurantId}/masalar`, requiredPlans: ['business'] },
-        { name: "Adisyon Yönetimi", href: `/adisyonlar/${restaurantId}`, requiredPlans: ['business'] },
-        { name: "Restoran Ayarları", href: `/dashboard/restaurants/${restaurantId}/ayarlar`, requiredPlans: ['free', 'pro', 'business'] },
+        { name: "Genel Bakış", href: `/dashboard/restaurants/${restaurantId}`, requiredPlans: ['free', 'pro', 'bussiness'] },
+        { name: "Kategoriler", href: `/dashboard/restaurants/${restaurantId}/kategoriler`, requiredPlans: ['free', 'pro', 'bussiness'] },
+        { name: "Ürünler", href: `/dashboard/restaurants/${restaurantId}/urunler`, requiredPlans: ['free', 'pro', 'bussiness'] },
+        { name: "Tasarım & Özelleştirme", href: `/dashboard/restaurants/${restaurantId}/tasarim`, requiredPlans: ['pro', 'bussiness'] },
+        { name: "Masalar", href: `/dashboard/restaurants/${restaurantId}/masalar`, requiredPlans: ['bussiness'] },
+        { name: "Adisyon Yönetimi", href: `/adisyonlar/${restaurantId}`, requiredPlans: ['bussiness'] },
+        { name: "Restoran Ayarları", href: `/dashboard/restaurants/${restaurantId}/ayarlar`, requiredPlans: ['free', 'pro', 'bussiness'] },
     ];
 
     // Aktif olan sekmeyi bulmak için
