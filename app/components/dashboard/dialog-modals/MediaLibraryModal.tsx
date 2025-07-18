@@ -18,54 +18,44 @@ import { useSnackbar } from '@/app/context/SnackBarContext';
 interface MediaLibraryModalProps {
     open: boolean;
     onClose: () => void;
-    onSelect: (media: StrapiMedia) => void;
+    onSelect: (media: StrapiMedia | StrapiMedia[]) => void;
+    multiple: boolean;
+
 }
 
 // "Galerim" sekmesinin içeriğini yönetecek alt bileşen
-function MyGalleryTab({ onImageSelect, selectedImageId }: { onImageSelect: (file: StrapiMedia) => void, selectedImageId: number | null }) {
+function MyGalleryTab({ onImageSelect, selectedImages, multiple }: { onImageSelect: (file: StrapiMedia) => void, selectedImages: StrapiMedia[], multiple: boolean }) {
     const { data: files, isLoading, isError } = useQuery({
         queryKey: ['my-media-files'],
         queryFn: () => getMyMediaFiles(Cookies.get('jwt')!),
     });
-    console.log(files);
+    const handleSelect = (file: StrapiMedia) => {
+        onImageSelect(file);
+    };
     if (isLoading) return <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} />;
     if (isError) return <Alert severity="error">Dosyalar yüklenirken bir hata oluştu.</Alert>;
 
     return (
-        <ImageList cols={5} gap={8} sx={{ mt: 2, maxHeight: '50vh' }}>
+        <ImageList cols={5} /*...*/ >
             {(files ?? []).map(file => {
-                const displayMedia = file.formats?.thumbnail
-                    ? { ...file, url: file.formats.thumbnail.url }
-                    : file;
+                const isSelected = selectedImages.some(img => img.id === file.id);
                 return (
-                    <ImageListItem
-                        key={file.id}
-                        onClick={() => onImageSelect(file)}
-                        sx={{
-                            cursor: 'pointer',
-                            border: selectedImageId === file.id ? '3px solid' : '2px solid transparent',
-                            borderColor: 'primary.main',
-                            borderRadius: 1,
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <img src={getStrapiMedia(displayMedia)} alt={file.alternativeText || file.name} loading="lazy" />
-                        {selectedImageId === file.id && (
+                    <ImageListItem key={file.id} onClick={() => handleSelect(file)} /*...*/ >
+                        <img src={getStrapiMedia(file)} /*...*/ />
+                        {/* Seçim göstergesi artık Checkbox veya başka bir ikon olabilir */}
+                        {isSelected && (
                             <ImageListItemBar
-                                sx={{ bgcolor: 'rgba(0,0,0,0.7)' }}
                                 position="top"
                                 actionIcon={<IconButton sx={{ color: 'white' }}><CheckCircle color="success" /></IconButton>}
                             />
                         )}
                     </ImageListItem>
-                )
+                );
             })}
         </ImageList>
     );
 }
-// app/components/dashboard/MediaLibraryModal.tsx
 
-// ...
 
 function UploadNewTab({ onUploadComplete }: { onUploadComplete: (file: StrapiMedia) => void }) {
     const [isUploading, setUploading] = useState(false);
@@ -117,22 +107,42 @@ function UploadNewTab({ onUploadComplete }: { onUploadComplete: (file: StrapiMed
     );
 }
 
-export default function MediaLibraryModal({ open, onClose, onSelect }: MediaLibraryModalProps) {
+export default function MediaLibraryModal({ open, onClose, onSelect, multiple = false }: MediaLibraryModalProps) {
     const queryClient = useQueryClient(); // QueryClient hook'unu çağır
 
     const [tab, setTab] = useState(0);
     const [selectedImage, setSelectedImage] = useState<StrapiMedia | null>(null);
+    const [selectedImages, setSelectedImages] = useState<StrapiMedia[]>([]);
+
+    const handleToggleSelection = (image: StrapiMedia) => {
+        setSelectedImages(prev => {
+            // Eğer çoklu seçim aktif değilse, her zaman sadece son seçileni tut
+            if (!multiple) {
+                return [image];
+            }
+            // Çoklu seçim aktifse...
+            const isSelected = prev.some(img => img.id === image.id);
+            if (isSelected) {
+                // Zaten seçiliyse, listeden çıkar
+                return prev.filter(img => img.id !== image.id);
+            } else {
+                // Seçili değilse, listeye ekle
+                return [...prev, image];
+            }
+        });
+    };
 
     const handleSelectAndClose = () => {
-        if (selectedImage) {
-            onSelect(selectedImage);
-            onClose();
-            setSelectedImage(null); // Modalı bir sonrakine hazırla
+        if (selectedImages.length > 0) {
+            // Eğer çoklu seçim ise diziyi, değilse ilk elemanı gönder
+            const selection = multiple ? selectedImages : selectedImages[0];
+            onSelect(selection);
+            handleClose();
         }
     };
 
     const handleClose = () => {
-        setSelectedImage(null);
+        setSelectedImages([]);
         onClose();
     }
     const handleUploadAndSelect = (newFile: StrapiMedia) => {
@@ -153,15 +163,21 @@ export default function MediaLibraryModal({ open, onClose, onSelect }: MediaLibr
                     <Tab label="Yeni Yükle" />
                 </Tabs>
 
-                {tab === 0 && <MyGalleryTab onImageSelect={setSelectedImage} selectedImageId={selectedImage?.id || null} />}
+                {tab === 0 && (
+                    <MyGalleryTab
+                        onImageSelect={handleToggleSelection}
+                        selectedImages={selectedImages}
+                        multiple={multiple}
+                    />
+                )}
                 {tab === 1 && <Box sx={{ p: 4, textAlign: 'center' }}><Typography>Stok görseller özelliği yakında!</Typography></Box>}
                 {tab === 2 && <UploadNewTab onUploadComplete={handleUploadAndSelect} />}
 
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>İptal</Button>
-                <Button onClick={handleSelectAndClose} disabled={!selectedImage} variant="contained">
-                    Seç
+                <Button onClick={handleSelectAndClose} disabled={selectedImages.length === 0} variant="contained">
+                    {selectedImages.length > 0 ? `${selectedImages.length} Öğe Seç` : 'Seç'}
                 </Button>
             </DialogActions>
         </Dialog>

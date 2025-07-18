@@ -5,11 +5,14 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { createProduct, uploadFile } from '@/app/lib/api';
-import type { Category, NewProductData } from '@/app/types/strapi';
+import Image from 'next/image'
+import type { Category, NewProductData, StrapiMedia } from '@/app/types/strapi';
 
 import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box, Select, MenuItem, InputLabel, FormControl, Divider, Chip, Paper, Typography, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { ImagePlus, PlusCircle, Trash2, XIcon } from 'lucide-react';
+import MediaLibraryModal from './MediaLibraryModal';
+import { getStrapiMedia } from '@/app/lib/utils';
 
 interface AddProductModalProps {
     open: boolean;
@@ -23,7 +26,7 @@ type ProductFormData = {
     description: string;
     price: number;
     category: number; // Sadece ID'sini tutacağız
-    images?: FileList;
+    images?: number[];
     variations: {
         title: string;
         type: 'single' | 'multiple';
@@ -37,9 +40,10 @@ type ProductFormData = {
 export default function AddProductModal({ open, onClose, restaurantId, categories }: AddProductModalProps) {
     const queryClient = useQueryClient();
 
-    const { control, handleSubmit, reset, watch } = useForm<ProductFormData>();
-    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-    const imageField = watch('images');
+    const { control, handleSubmit, reset, setValue } = useForm<ProductFormData>({
+        defaultValues: { name: '', images: [], variations: [] },
+    }); const [isMediaModalOpen, setMediaModalOpen] = useState(false);
+    const [selectedImages, setSelectedImages] = useState<StrapiMedia[]>([]);
 
     const { fields: variationFields, append: appendVariation, remove: removeVariation } = useFieldArray({
         control,
@@ -50,15 +54,6 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
         mutationFn: async (formData: ProductFormData) => {
             const token = Cookies.get('jwt');
             if (!token) throw new Error('Not authenticated');
-
-            let imageIds: number[] = [];
-
-            // Eğer resimler seçilmişse, hepsini yükle ve ID'lerini topla
-            if (formData.images && formData.images.length > 0) {
-                const uploadPromises = Array.from(formData.images).map(file => uploadFile(file, token));
-                const imageList = await Promise.all(uploadPromises);
-                imageIds = imageList[0].map(item=>item.id)
-            }
 
             const variationsForApi = formData.variations.map(variation => {
                 return {
@@ -78,12 +73,12 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
                 price: +formData.price, // Sayıya dönüştürdüğümüzden emin olalım
                 description: formData.description,
                 category: formData.category,
-                images: imageIds,
+                images: formData.images,
                 is_available: true, // Varsayılan olarak mevcut
                 variations: variationsForApi,
 
             };
-
+            console.log(productData);
             return createProduct(productData as NewProductData, token);
         },
         onSuccess: () => {
@@ -91,107 +86,142 @@ export default function AddProductModal({ open, onClose, restaurantId, categorie
             handleClose();
         },
     });
-
+    // Medya kütüphanesinden resimler seçildiğinde çalışacak fonksiyon
+    const handleImagesSelect = (media: StrapiMedia | StrapiMedia[]) => {
+        const mediaArray = Array.isArray(media) ? media : [media];
+        // Mevcut seçime yenilerini ekleyerek birleştir (tekrarları önle)
+        const newSelectedImages = [...selectedImages];
+        mediaArray.forEach(m => {
+            if (!newSelectedImages.some(img => img.id === m.id)) {
+                newSelectedImages.push(m);
+            }
+        })
+        setSelectedImages(newSelectedImages);
+        setValue('images', newSelectedImages.map(m => m.id), { shouldDirty: true });
+        setMediaModalOpen(false);
+    };
+    const handleRemoveImage = (imageId: number) => {
+        const newSelectedImages = selectedImages.filter(img => img.id !== imageId);
+        setSelectedImages(newSelectedImages);
+        setValue('images', newSelectedImages.map(m => m.id), { shouldDirty: true });
+    };
     const handleClose = () => {
         reset(); // Formu sıfırla
         onClose();
-        setPreviewUrls([]); // Kapatırken önizlemeleri de sıfırla
+        setSelectedImages([]);
 
     };
 
     const onSubmit = (data: ProductFormData) => {
         mutate(data);
     };
-    useEffect(() => {
-        if (imageField && imageField.length > 0) {
-            // Seçilen her bir dosya için geçici bir URL oluştur
-            const newUrls = Array.from(imageField).map(file => URL.createObjectURL(file));
-            setPreviewUrls(newUrls);
-            // Component unmount olduğunda veya dosyalar değiştiğinde,
-            // hafıza sızıntısını önlemek için oluşturulan tüm URL'leri temizle
-            return () => newUrls.forEach(url => URL.revokeObjectURL(url));
-        } else {
-            setPreviewUrls([]);
-        }
-    }, [imageField]);
 
     return (
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-            <DialogTitle>Yeni Ürün Ekle</DialogTitle>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <DialogContent>
-                    {error && <Alert severity="error" sx={{ mb: 2 }}>{(error as Error).message}</Alert>}
-                    <Controller name="name" control={control} rules={{ required: 'Ürün adı zorunludur.' }} render={({ field, fieldState }) => (<TextField {...field} fullWidth margin="dense" label="Ürün Adı" error={!!fieldState.error} helperText={fieldState.error?.message} />)} />
-                    <Controller name="description" control={control} render={({ field }) => (<TextField {...field} fullWidth margin="dense" label="Açıklama" multiline rows={3} />)} />
-                    <Controller name="price" control={control} rules={{ required: 'Fiyat zorunludur.' }} render={({ field, fieldState }) => (<TextField {...field} fullWidth margin="dense" label="Fiyat" type="number" error={!!fieldState.error} helperText={fieldState.error?.message} />)} />
-                    <Controller name="category" control={control} rules={{ required: 'Kategori seçimi zorunludur.' }} render={({ field, fieldState }) => (
-                        <FormControl fullWidth margin="dense" error={!!fieldState.error}>
-                            <InputLabel>Kategori</InputLabel>
-                            <Select {...field} label="Kategori">
-                                {categories.map(cat => (
-                                    <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    )} />
-                    {previewUrls.length > 0 && (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, my: 2, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                            {previewUrls.map((url, index) => (
-                                <img
-                                    key={index}
-                                    src={url}
-                                    alt={`Önizleme ${index + 1}`}
-                                    style={{ height: '80px', width: '80px', objectFit: 'cover', borderRadius: '4px' }}
-                                />
-                            ))}
+        <>
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
+                <DialogTitle>Yeni Ürün Ekle</DialogTitle>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <DialogContent>
+                        {error && <Alert severity="error" sx={{ mb: 2 }}>{(error as Error).message}</Alert>}
+                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Controller name="name" control={control} rules={{ required: 'Ürün adı zorunludur.' }} render={({ field, fieldState }) => (<TextField {...field} fullWidth margin="dense" label="Ürün Adı" error={!!fieldState.error} helperText={fieldState.error?.message} />)} />
+                                <Controller name="description" control={control} render={({ field }) => (<TextField {...field} fullWidth margin="dense" label="Açıklama" multiline rows={3} />)} />
+                                <Controller name="price" control={control} rules={{ required: 'Fiyat zorunludur.' }} render={({ field, fieldState }) => (<TextField {...field} fullWidth margin="dense" label="Fiyat" type="number" error={!!fieldState.error} helperText={fieldState.error?.message} />)} />
+                                <Controller name="category" control={control} rules={{ required: 'Kategori seçimi zorunludur.' }} render={({ field, fieldState }) => (
+                                    <FormControl fullWidth margin="dense" error={!!fieldState.error}>
+                                        <InputLabel>Kategori</InputLabel>
+                                        <Select {...field} label="Kategori">
+                                            {categories.map(cat => (
+                                                <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )} />
+                                <Box mt={1}>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                        Ürün Resimleri ({selectedImages.length})
+                                    </Typography>
+
+                                    {/* YENİ: Seçilen Resimlerin Önizlemesi */}
+                                    {selectedImages.length > 0 && (
+                                        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 1.5, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                                            {selectedImages.map(img => (
+                                                <Box key={img.id} sx={{ position: 'relative' }}>
+                                                    <Image src={getStrapiMedia(img)} alt={img.name} width={80} height={80} style={{ borderRadius: '8px', objectFit: 'cover' }} />
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleRemoveImage(img.id)}
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            top: -5,
+                                                            right: -5,
+                                                            bgcolor: 'rgba(0,0,0,0.7)',
+                                                            color: 'white',
+                                                            '&:hover': { bgcolor: 'rgba(0,0,0,0.9)' }
+                                                        }}
+                                                    >
+                                                        <XIcon size={14} />
+                                                    </IconButton>
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    )}
+
+                                    <Button startIcon={<ImagePlus />} onClick={() => setMediaModalOpen(true)}>
+                                        Galeriden Seç / Yükle
+                                    </Button>
+                                </Box>
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                                <Divider sx={{ display: { xs: 'block', md: 'none' }, mb: 2 }}><Chip label="Ürün Varyasyonları" /></Divider>
+                                <Typography variant="h6" sx={{ display: { xs: 'none', md: 'block' }, mb: 2 }}>Ürün Varyasyonları</Typography>
+
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: '50vh', overflowY: 'auto', p: 0.5 }}>
+                                    {variationFields.map((field, index) => (
+                                        <Paper key={field.id} variant="outlined" sx={{ p: 2 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                                <Typography sx={{ fontWeight: 'bold' }}>Varyasyon Grubu #{index + 1}</Typography>
+                                                <IconButton onClick={() => removeVariation(index)} color="error"><Trash2 size={18} /></IconButton>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                                <Controller name={`variations.${index}.title`} control={control} rules={{ required: true }} render={({ field }) => <TextField {...field} label="Grup Başlığı (örn: Porsiyon)" size="small" sx={{ flex: 1 }} />} />
+                                                <Controller name={`variations.${index}.type`} control={control} defaultValue="single" render={({ field }) => (
+                                                    <FormControl size="small" sx={{ flex: 1 }}>
+                                                        <InputLabel>Seçim Tipi</InputLabel>
+                                                        <Select {...field} label="Seçim Tipi">
+                                                            <MenuItem value="single">Tekli Seçim</MenuItem>
+                                                            <MenuItem value="multiple">Çoklu Seçim</MenuItem>
+                                                        </Select>
+                                                    </FormControl>
+                                                )} />
+                                            </Box>
+                                            <Typography variant="body2" sx={{ mt: 2, mb: 1, fontWeight: 'medium' }}>Seçenekler:</Typography>
+                                            <OptionsArray nestedIndex={index} control={control} />
+                                        </Paper>
+                                    ))}
+                                </Box>
+                                <Button startIcon={<PlusCircle size={16} />} onClick={() => appendVariation({ title: '', type: 'single', options: [] })} sx={{ mt: 2 }}>
+                                    Varyasyon Grubu Ekle
+                                </Button>
+                            </Box>
                         </Box>
-                    )}
-                    <Controller name="images" control={control} render={({ field: { onChange } }) => (
-                        <Button variant="outlined" component="label" fullWidth sx={{ mt: 2 }}>
-                            Resim(ler) Seç
-                            <input type="file" hidden multiple accept="image/*" onChange={(e) => onChange(e.target.files)} />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleClose}>İptal</Button>
+                        <Button type="submit" disabled={isPending} variant="contained">
+                            {isPending ? 'Ekleniyor...' : 'Ürünü Ekle'}
                         </Button>
-                    )} />
-
-                    <Divider sx={{ my: 3 }}><Chip label="Ürün Varyasyonları" /></Divider>
-
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        {variationFields.map((field, index) => (
-                            <Paper key={field.id} variant="outlined" sx={{ p: 2 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                    <Typography sx={{ fontWeight: 'bold' }}>Varyasyon Grubu #{index + 1}</Typography>
-                                    <IconButton onClick={() => removeVariation(index)} color="error"><Trash2 size={18} /></IconButton>
-                                </Box>
-                                <Box sx={{ display: 'flex', gap: 2 }}>
-                                    <Controller name={`variations.${index}.title`} control={control} rules={{ required: true }} render={({ field }) => <TextField {...field} label="Grup Başlığı (örn: Porsiyon)" size="small" sx={{ flex: 1 }} />} />
-                                    <Controller name={`variations.${index}.type`} control={control} defaultValue="single" render={({ field }) => (
-                                        <FormControl size="small" sx={{ flex: 1 }}>
-                                            <InputLabel>Seçim Tipi</InputLabel>
-                                            <Select {...field} label="Seçim Tipi">
-                                                <MenuItem value="single">Tekli Seçim</MenuItem>
-                                                <MenuItem value="multiple">Çoklu Seçim</MenuItem>
-                                            </Select>
-                                        </FormControl>
-                                    )} />
-                                </Box>
-                                <Typography variant="body2" sx={{ mt: 2, mb: 1, fontWeight: 'medium' }}>Seçenekler:</Typography>
-                                <OptionsArray nestedIndex={index} control={control} />
-                            </Paper>
-                        ))}
-                    </Box>
-                    <Button startIcon={<PlusCircle size={16} />} onClick={() => appendVariation({ title: '', type: 'single', options: [] })} sx={{ mt: 2 }}>
-                        Varyasyon Grubu Ekle
-                    </Button>
-
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>İptal</Button>
-                    <Button type="submit" disabled={isPending} variant="contained">
-                        {isPending ? 'Ekleniyor...' : 'Ürünü Ekle'}
-                    </Button>
-                </DialogActions>
-            </form>
-        </Dialog>
+                    </DialogActions>
+                </form>
+            </Dialog>
+            <MediaLibraryModal
+                open={isMediaModalOpen}
+                onClose={() => setMediaModalOpen(false)}
+                onSelect={handleImagesSelect}
+                multiple={true} // ÇOKLU SEÇİMİ AKTİF EDİYORUZ
+            />
+        </>
     );
 }
 
