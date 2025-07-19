@@ -4,12 +4,12 @@
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
-import { createProduct, uploadFile } from '@/app/lib/api';
+import { createProduct } from '@/app/lib/api';
 import Image from 'next/image'
 import type { Category, NewProductData, StrapiMedia } from '@/app/types/strapi';
 
 import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box, Select, MenuItem, InputLabel, FormControl, Divider, Chip, Paper, Typography, IconButton } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ImagePlus, PlusCircle, Trash2, XIcon } from 'lucide-react';
 import MediaLibraryModal from './MediaLibraryModal';
 import { getStrapiMedia } from '@/app/lib/utils';

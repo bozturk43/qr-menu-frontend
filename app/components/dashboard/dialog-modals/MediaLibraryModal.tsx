@@ -1,7 +1,7 @@
 // app/components/dashboard/MediaLibraryModal.tsx
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { getMyMediaFiles, uploadFile } from '@/app/lib/api';
@@ -9,11 +9,12 @@ import type { StrapiMedia } from '@/app/types/strapi';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab, Box,
     CircularProgress, ImageList, ImageListItem, ImageListItemBar, IconButton, Button, Alert,
-    Typography
+    TextField
 } from '@mui/material';
 import { CheckCircle } from '@mui/icons-material';
 import { getStrapiMedia } from '@/app/lib/utils';
 import { useSnackbar } from '@/app/context/SnackBarContext';
+import { getStockImages } from '@/app/lib/api/stock-image.api';
 
 interface MediaLibraryModalProps {
     open: boolean;
@@ -24,7 +25,7 @@ interface MediaLibraryModalProps {
 }
 
 // "Galerim" sekmesinin içeriğini yönetecek alt bileşen
-function MyGalleryTab({ onImageSelect, selectedImages, multiple }: { onImageSelect: (file: StrapiMedia) => void, selectedImages: StrapiMedia[], multiple: boolean }) {
+function MyGalleryTab({ onImageSelect, selectedImages }: { onImageSelect: (file: StrapiMedia) => void, selectedImages: StrapiMedia[] }) {
     const { data: files, isLoading, isError } = useQuery({
         queryKey: ['my-media-files'],
         queryFn: () => getMyMediaFiles(Cookies.get('jwt')!),
@@ -55,8 +56,6 @@ function MyGalleryTab({ onImageSelect, selectedImages, multiple }: { onImageSele
         </ImageList>
     );
 }
-
-
 function UploadNewTab({ onUploadComplete }: { onUploadComplete: (file: StrapiMedia) => void }) {
     const [isUploading, setUploading] = useState(false);
     const { showSnackbar } = useSnackbar();
@@ -106,12 +105,71 @@ function UploadNewTab({ onUploadComplete }: { onUploadComplete: (file: StrapiMed
         </Box>
     );
 }
+function StockGalleryTab({ onImageSelect, selectedImageId }: {
+    onImageSelect: (file: StrapiMedia) => void,
+    selectedImageId: number | null
+}) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+    // Kullanıcı yazmayı bıraktıktan sonra arama yapmak için (performans)
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500); // 500ms bekle
+
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    const { data: stockImages, isLoading, isError } = useQuery({
+        queryKey: ['stock-images', debouncedSearchTerm],
+        queryFn: () => getStockImages(debouncedSearchTerm),
+    });
+
+    if (isError) return <Alert severity="error">Görseller yüklenirken bir hata oluştu.</Alert>;
+
+    return (
+        <Box sx={{ mt: 2 }}>
+            <TextField
+                fullWidth
+                label="Görsel Ara (örn: çorba, kebap, içecek)"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+            />
+            {isLoading ? <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} /> : (
+                <ImageList cols={5} gap={8} sx={{ mt: 2, maxHeight: '45vh' }}>
+                    {(stockImages ?? []).map(stockImage => {
+                        if (!stockImage) return null;
+                        return (
+                            <ImageListItem
+                                key={stockImage.id}
+                                onClick={() => onImageSelect(stockImage)}
+                                sx={{
+                                    cursor: 'pointer',
+                                    border: selectedImageId === stockImage.id ? '3px solid' : '2px solid transparent',
+                                    borderColor: 'primary.main',
+                                }}
+                            >
+                                <img src={getStrapiMedia(stockImage)} alt={stockImage.alternativeText || stockImage.name} loading="lazy" />
+                                {selectedImageId === stockImage.id && (
+                                    <ImageListItemBar
+                                        position="top"
+                                        actionIcon={<IconButton sx={{ color: 'white' }}><CheckCircle color="success" /></IconButton>}
+                                    />
+                                )}
+                            </ImageListItem>
+                        );
+                    })}
+                </ImageList>
+            )}
+        </Box>
+    );
+}
 
 export default function MediaLibraryModal({ open, onClose, onSelect, multiple = false }: MediaLibraryModalProps) {
     const queryClient = useQueryClient(); // QueryClient hook'unu çağır
 
     const [tab, setTab] = useState(0);
-    const [selectedImage, setSelectedImage] = useState<StrapiMedia | null>(null);
     const [selectedImages, setSelectedImages] = useState<StrapiMedia[]>([]);
 
     const handleToggleSelection = (image: StrapiMedia) => {
@@ -167,10 +225,9 @@ export default function MediaLibraryModal({ open, onClose, onSelect, multiple = 
                     <MyGalleryTab
                         onImageSelect={handleToggleSelection}
                         selectedImages={selectedImages}
-                        multiple={multiple}
                     />
                 )}
-                {tab === 1 && <Box sx={{ p: 4, textAlign: 'center' }}><Typography>Stok görseller özelliği yakında!</Typography></Box>}
+                {tab === 1 && <StockGalleryTab onImageSelect={handleToggleSelection} selectedImageId={selectedImages[0]?.id || null} />}
                 {tab === 2 && <UploadNewTab onUploadComplete={handleUploadAndSelect} />}
 
             </DialogContent>

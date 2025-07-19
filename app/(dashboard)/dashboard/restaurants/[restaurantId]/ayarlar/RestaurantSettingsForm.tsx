@@ -68,13 +68,12 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
     }
 
   };
-  // Yeni dosya seçildiğinde state'i ve önizlemeyi güncelleyen fonksiyon
-  const handleLogoSelect = (media: StrapiMedia) => {
-    // 1. Formun 'logo' alanının değerini seçilen resmin ID'si ile güncelle
-    setValue('logo', media.id, { shouldDirty: true });
-    // 2. Ekrondaki önizlemeyi güncelle
-    setLogoPreview(getStrapiMedia(media));
-    // 3. Modalı kapat
+  const handleLogoSelect = (media: StrapiMedia | StrapiMedia[]) => {
+    const singleMedia = Array.isArray(media) ? media[0] : media;
+    if (singleMedia) {
+      setValue('logo', singleMedia.id, { shouldDirty: true });
+      setLogoPreview(getStrapiMedia(singleMedia));
+    }
   };
   // Mevcut logoyu kaldırma fonksiyonu
   const handleRemoveLogo = () => {
@@ -152,6 +151,7 @@ export default function RestaurantSettingsForm({ restaurant }: SettingsFormProps
       <MediaLibraryModal
         open={isMediaModalOpen}
         onClose={() => setMediaModalOpen(false)}
+        multiple={false}
         onSelect={handleLogoSelect}
       />
     </>

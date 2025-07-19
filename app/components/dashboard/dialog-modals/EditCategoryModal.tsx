@@ -4,10 +4,16 @@ import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
-import { updateCategory, uploadFile } from '@/app/lib/api';
-import type { Category, UpdateCategoryData } from '@/app/types/strapi';
+import { updateCategory } from '@/app/lib/api';
+import type { Category, StrapiMedia, UpdateCategoryData } from '@/app/types/strapi';
+import Image from 'next/image';
 
-import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box } from '@mui/material';
+
+import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Box, Typography } from '@mui/material';
+import { useSnackbar } from '@/app/context/SnackBarContext';
+import { getStrapiMedia } from '@/app/lib/utils';
+import { ImagePlus } from 'lucide-react';
+import MediaLibraryModal from './MediaLibraryModal';
 
 interface EditCategoryModalProps {
   open: boolean;
@@ -18,102 +24,107 @@ interface EditCategoryModalProps {
 
 type CategoryFormData = {
   name: string;
-  image?: FileList;
+  image?: number;
 };
 
 export default function EditCategoryModal({ open, category, onClose, restaurantId }: EditCategoryModalProps) {
   const queryClient = useQueryClient();
-  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
-
-  const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<CategoryFormData>();
-  
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
+  const { showSnackbar } = useSnackbar();
+  const [isMediaModalOpen, setMediaModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<StrapiMedia | null>(null);
+  const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<CategoryFormData>();
   // Modal her açıldığında veya kategori prop'u değiştiğinde formu doldur
   useEffect(() => {
-    if (category) {
-      reset({ name: category.name });
-      setPreviewUrl(category.image ? `${STRAPI_URL}${category.image.url}` : null);
+    if (category && open) {
+      reset({
+        name: category.name,
+        image: category.image?.id,
+      });
+      setSelectedImage(category.image || null);
     }
-  }, [category, reset]);
+  }, [category, open, reset]);
 
-  // Yeni bir resim seçildiğinde önizlemeyi güncelle
-  const imageField = watch('image');
-  useEffect(() => {
-    if (imageField && imageField.length > 0) {
-      const file = imageField[0];
-      const newPreviewUrl = URL.createObjectURL(file);
-      setPreviewUrl(newPreviewUrl);
-      return () => URL.revokeObjectURL(newPreviewUrl);
-    }
-  }, [imageField]);
+
 
 
   const { mutate, isPending, error } = useMutation({
-    mutationFn: async (formData: CategoryFormData) => {
+    mutationFn: (formData: CategoryFormData) => {
       const token = Cookies.get('jwt');
       if (!token) throw new Error('Not authenticated');
-
-      let imageId: number | undefined = category.image?.id;
-
-      // 1. Eğer YENİ bir resim seçilmişse, onu yükle ve ID'sini al
-      if (formData.image && formData.image.length > 0) {
-        const imageArray = await uploadFile(formData.image[0], token);
-        imageId = imageArray[0].id;
-      }
-
-      // 2. Güncellenecek veriyi hazırla
-      const updateData: UpdateCategoryData = {
+      const categoryData: UpdateCategoryData = {
         name: formData.name,
-        image: imageId,
+        image: formData.image,
       };
-
-      // 3. Kategoriyi güncelle
-      return updateCategory(category.id, updateData, token);
+      // createCategory yerine updateCategory'yi kullanıyoruz
+      return updateCategory(category.id, categoryData, token);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId] });
+      showSnackbar('Kategori başarıyla güncellendi.', 'success');
       onClose();
     },
+    onError: (err) => showSnackbar((err as Error).message, 'error'),
   });
-  
-  const onSubmit = (data: CategoryFormData) => {
-    mutate(data);
+
+  const onSubmit = (data: CategoryFormData) => mutate(data);
+  const handleImageSelect = (media: StrapiMedia | StrapiMedia[]) => {
+    const singleMedia = Array.isArray(media) ? media[0] : media;
+    if (singleMedia) {
+      setValue('image', singleMedia.id, { shouldDirty: true });
+      setSelectedImage(singleMedia);
+    }
+    setMediaModalOpen(false);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Kategoriyi Düzenle</DialogTitle>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
-          <Controller
-            name="name"
-            control={control}
-            rules={{ required: 'Kategori adı zorunludur.' }}
-            render={({ field }) => <TextField {...field} autoFocus margin="dense" label="Kategori Adı" fullWidth variant="outlined" error={!!errors.name} helperText={errors.name?.message} sx={{ mb: 2 }} />}
-          />
-          {previewUrl && (
-            <Box sx={{ my: 2, textAlign: 'center' }}><img src={previewUrl} alt="Önizleme" style={{ maxHeight: '150px', borderRadius: '8px' }} /></Box>
-          )}
-          <Controller
-            name="image"
-            control={control}
-            render={({ field: { onChange } }) => (
-              <Button variant="outlined" component="label" fullWidth>
-                {previewUrl ? 'Resmi Değiştir' : 'Resim Seç'}
-                <input type="file" hidden accept="image/*" onChange={(e) => onChange(e.target.files)} />
+    <>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+        <DialogTitle>Kategoriyi Düzenle</DialogTitle>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogContent>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
+            <Controller
+              name="name"
+              control={control}
+              rules={{ required: 'Kategori adı zorunludur.' }}
+              render={({ field }) => <TextField {...field} autoFocus margin="dense" label="Kategori Adı" fullWidth variant="outlined" error={!!errors.name} helperText={errors.name?.message} sx={{ mb: 2 }} />}
+            />
+            <Box mt={2}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>Kategori Resmi</Typography>
+              {selectedImage && (
+                <Box sx={{ my: 1 }}>
+                  <Image
+                    src={getStrapiMedia(selectedImage)}
+                    alt={selectedImage.name}
+                    width={100}
+                    height={100}
+                    style={{ borderRadius: '8px', objectFit: 'cover' }}
+                  />
+                </Box>
+              )}
+              <Button
+                startIcon={<ImagePlus />}
+                onClick={() => setMediaModalOpen(true)}
+                variant="outlined"
+              >
+                {selectedImage ? 'Resmi Değiştir' : 'Galeriden Seç / Yükle'}
               </Button>
-            )}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>İptal</Button>
-          <Button type="submit" disabled={isPending} variant="contained">
-            {isPending ? 'Güncelleniyor...' : 'Kaydet'}
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={onClose}>İptal</Button>
+            <Button type="submit" disabled={isPending} variant="contained">
+              {isPending ? 'Güncelleniyor...' : 'Kaydet'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+      <MediaLibraryModal
+        open={isMediaModalOpen}
+        onClose={() => setMediaModalOpen(false)}
+        onSelect={handleImageSelect}
+        multiple={false} // Kategori için TEKLİ SEÇİM
+      />
+    </>
   );
 }

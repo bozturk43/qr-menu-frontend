@@ -9,6 +9,8 @@ export * from './table.api';
 export * from './order.api';
 export * from './order-item.api'
 export * from './media.api'
+export * from './stock-image.api'
+
 
 
 

@@ -5,7 +5,7 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import Cookies from 'js-cookie';
-import { updateProduct, uploadFile } from '@/app/lib/api';
+import { updateProduct } from '@/app/lib/api';
 import type { Product, StrapiMedia, Category, UpdateProductData } from '@/app/types/strapi';
 
 // MUI & İkonlar
